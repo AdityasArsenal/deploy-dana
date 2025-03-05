@@ -9,20 +9,11 @@ import uuid
 from datetime import datetime
 from pymongo import MongoClient
 from typing import Optional
-import platform
-
 import uvicorn
-
 
 # Load environment variables
 load_dotenv()
 app = FastAPI()
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))  # Default to 8000 if PORT is not set
-    uvicorn.run(app, host="0.0.0.0", port=port)
-
-
 
 # Azure configuration
 endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
