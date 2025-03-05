@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+myenv/
+ENV/
+
+# Streamlit secrets file (if any)
+.secrets.toml
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Logs and caches
+logs/
+*.log
+*.sqlite3
+*.db
+*.sqlite
+
+# Environment variables
+.env
+*.env
+
+# Pytest and test coverage
+.coverage
+.tox/
+.nox/
+pytest_cache/
+
+# Azure and OpenAI credentials (ensure they are not hardcoded)
+azure/
+openai/
+
+# MongoDB dumps and local database files
+*.json
+*.bson
+*.pkl
+
+# OS-specific files
+.DS_Store
+Thumbs.db
