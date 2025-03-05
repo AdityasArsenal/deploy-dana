@@ -4,12 +4,12 @@ import os
 from openai import AzureOpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from dotenv import load_dotenv
-from azure.cosmos import CosmosClient, PartitionKey
 import uuid
 from datetime import datetime
 from pymongo import MongoClient
 from typing import Optional
 import uvicorn
+
 
 # Load environment variables
 load_dotenv()
