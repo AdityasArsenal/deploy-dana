@@ -12,7 +12,8 @@ import uvicorn
 
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=False)
+
 app = FastAPI()
 
 # Azure configuration
