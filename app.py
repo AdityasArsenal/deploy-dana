@@ -11,18 +11,18 @@ from pymongo import MongoClient
 from typing import Optional
 import platform
 
-# Check if the operating system is Windows
-if platform.system() == "Windows":
-    import win32api  # Example import from pywin32
-    # Initialize or configure Windows-specific functionality here
-else:
-    # Initialize or configure alternative functionality for non-Windows systems
-    pass
+import uvicorn
 
 
 # Load environment variables
 load_dotenv()
 app = FastAPI()
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))  # Default to 8000 if PORT is not set
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
+
 
 # Azure configuration
 endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -151,3 +151,7 @@ def chat(request: ChatRequest):
         "references": reference_points,
         "conversation_id": conversation_id
     }
+
+@app.get("/")
+def home():
+    return {"message": "Hello, World!"}
