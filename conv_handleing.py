@@ -27,9 +27,10 @@ def conv_history(conversation_id, collection, chat_history_retrieval_limit):
     
     return provided_conversation_history
 
-def inserting_agent_chat_buffer(agents_conversation_id, collection, sub_question, worker_response, context_chunks):
+def inserting_agent_chat_buffer(agents_conversation_id, conversation_id, collection, sub_question, worker_response, context_chunks):
     chat_history_doc = {
         "id": agents_conversation_id,
+        "tid": conversation_id,
         "sub_question": sub_question,
         "worker_response": worker_response,
         "timestamp": datetime.utcnow().isoformat(),
@@ -37,8 +38,22 @@ def inserting_agent_chat_buffer(agents_conversation_id, collection, sub_question
     }
     collection.insert_one(chat_history_doc)
 
-def agents_conv_history(conversation_id, collection, chat_history_retrieval_limit):
-    chat_history_retrieved = list(collection.find({"id": conversation_id}))
+def agents_conv_history(agents_conversation_id, collection, chat_history_retrieval_limit):
+    chat_history_retrieved = list(collection.find({"id": agents_conversation_id}))
+
+    recent_chat_history = chat_history_retrieved[-chat_history_retrieval_limit:] if chat_history_retrieved else []
+    provided_conversation_history = []
+    
+    for doc in recent_chat_history:
+        manager_agent_message = doc.get("sub_question", "")
+        worker_agent_message = doc.get("worker_response", "")
+        provided_conversation_history.append({"role": "manager_agent", "content": f"subquestion = {manager_agent_message}"})
+        provided_conversation_history.append({"role": "worker_agent", "content": f"answer ={worker_agent_message}"})
+
+    return provided_conversation_history
+
+def agents_total_conv_history(conversation_id, collection, chat_history_retrieval_limit):
+    chat_history_retrieved = list(collection.find({"tid": conversation_id}))
 
     recent_chat_history = chat_history_retrieved[-chat_history_retrieval_limit:] if chat_history_retrieved else []
     provided_conversation_history = []

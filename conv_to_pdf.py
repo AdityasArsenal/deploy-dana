@@ -1,12 +1,13 @@
+import os
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.units import inch
 from reportlab.lib import colors
-import os
 from datetime import datetime
 import re
+from azure.storage.blob import BlobServiceClient
 
 def markdown_to_reportlab(text):
     # Convert headers
@@ -34,7 +35,7 @@ def markdown_to_reportlab(text):
     
     return text
 
-def conversation_to_pdf(conversation_history, output_dir="conversation_pdfs"):
+def conversation_to_pdf(conversation_history, direcotr_response,output_dir="conversation_pdfs"):
 
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
@@ -42,7 +43,7 @@ def conversation_to_pdf(conversation_history, output_dir="conversation_pdfs"):
     
     # Generate filename with timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"agent_conversation_{timestamp}.pdf"
+    filename = f"Researched_info_{timestamp}.pdf"
     filepath = os.path.join(output_dir, filename)
     
     # Create PDF document
@@ -71,7 +72,7 @@ def conversation_to_pdf(conversation_history, output_dir="conversation_pdfs"):
     
     # Add title
     title_style = styles["Title"]
-    story.append(Paragraph("Agent Conversation History", title_style))
+    story.append(Paragraph("The the topics we discussed ", title_style))
     story.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles["Normal"]))
     story.append(Spacer(1, 0.25*inch))  # Add space
     
@@ -102,11 +103,25 @@ def conversation_to_pdf(conversation_history, output_dir="conversation_pdfs"):
         # Add spacing between Q&A pairs
         story.append(Spacer(1, 0.2*inch))
     
+    # Symmary (director response)
+    story.append(Paragraph("Summary", question_style))
+    final_formatted_answer = markdown_to_reportlab(direcotr_response)
+    story.append(Paragraph(final_formatted_answer, answer_style))
+    story.append(Spacer(1, 0.2*inch))
+    
     # Build PDF
     doc.build(story)
     
     return filepath
 
+def upload_pdf_to_blob(pdf_path, container_name, connection_string):
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    blob_client = blob_service_client.get_blob_client(container=container_name, blob=os.path.basename(pdf_path))
+
+    with open(pdf_path, "rb") as pdf_file:
+        blob_client.upload_blob(pdf_file, overwrite=True)
+
+    return blob_client.url  # Return the URL of the uploaded PDF
 
 # Example usage:
 # from consertations_handling import agents_conv_history

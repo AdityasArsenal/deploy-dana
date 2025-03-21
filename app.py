@@ -40,30 +40,30 @@ def agentic_flow(user_prompt,conversation_id):
     max_iterations = 3
     
     provided_conversation_history = conv_history(conversation_id, connection, chat_history_retrieval_limit)
-    agents_conversation_id = None
     no_iterations = 0
     context_chunks = ""
 
     print(f"🟢  USER : {user_prompt}")
-    final_response, iteratations, context_chunks =  manager(client, deployment, user_prompt, provided_conversation_history, max_iterations, connection, chat_history_retrieval_limit, no_iterations, context_chunks, agents_conversation_id)
+    final_response, iteratations, context_chunks, agents_conv_pdf_url =  manager(client, deployment, user_prompt, provided_conversation_history, max_iterations, connection, chat_history_retrieval_limit, no_iterations, context_chunks, conversation_id)
 
     #print(f"🟢{iteratations} times the worker was asked to improve the response")
     #print(f"🔵chunks used:  {context_chunks}")
     print(f"🔴  MODEL : {final_response}")
     
-    return final_response, context_chunks
+    return final_response, context_chunks, agents_conv_pdf_url
 
 @app.post("/chat")
 def chat(request: ChatRequest):
     # Use provided conversation_id or generate a new one if missing
     conversation_id = request.conversation_id or str(uuid.uuid4())
-    model_response, reference_points = agentic_flow(request.user_prompt, conversation_id)
+    model_response, reference_points, agents_conv_pdf_url= agentic_flow(request.user_prompt, conversation_id)
     inserting_chat_buffer(conversation_id, connection, request.user_prompt, model_response, reference_points)
     
     return {
         "response": model_response,
         "references": reference_points,
-        "conversation_id": conversation_id
+        "conversation_id": conversation_id,
+        "agents_conv_pdf_url" : agents_conv_pdf_url
     }
 
 @app.get("/")
