@@ -1,8 +1,19 @@
 import streamlit as st
 import requests
 
+def ping_server():
+    try:
+        # Replace with your actual Render service URL
+        response = requests.get("https://dana-test-v.onrender.com/")
+        response2 = requests.get("https://dana-test-v-qif0.onrender.com/")
+        print(f"Ping status of first server: {response.status_code}")
+        print(f"Ping status of second server: {response2.status_code}")
+    except Exception as e:
+        print(f"Ping error: {e}")
+
+
 # Backend URL
-WEBHOOK_URL = "http://localhost:8000/chat"
+WEBHOOK_URL = "https://dana-test-v.onrender.com/chat"
 
 # Initialize session state if not already present
 if "messages" not in st.session_state:
@@ -24,6 +35,7 @@ def display_chat():
 
 # Display chat history
 display_chat()
+ping_server()
 
 # Get user input
 user_input = st.chat_input("Enter your message here")
