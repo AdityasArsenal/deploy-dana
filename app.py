@@ -21,7 +21,7 @@ class ChatRequest(BaseModel):
     conversation_id: Optional[str] = None
 
 
-connection_string = "mongodb://chat-history-with-cosmos:aWQkNybTHAZ4ZHgYXGNb4E2VDQ2BGP8k0WYyGPuziM4D5TayG2Pf5fnxFSD8Y3nI6wmXJvph3In1ACDbKj2jRQ==@chat-history-with-cosmos.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@chat-history-with-cosmos@"
+connection_string = ""
 mongo_client = MongoClient(connection_string)
 db = mongo_client["ChatHistoryDatabase"]
 connection = db["chat-history-with-cosmos"]

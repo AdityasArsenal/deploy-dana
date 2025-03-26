@@ -1,32 +1,22 @@
 import streamlit as st
 import requests
-import time
 
+def ping_server():
+    try:
+        # Replace with your actual Render service URL
+        response = requests.get("https://dana-test-v.onrender.com/")
+        response2 = requests.get("https://dana-test-v-qif0.onrender.com/")
+        print("--------------------------------")
+        print(f"Ping status of first server: {response.status_code}")
+        print(f"Ping status of second server: {response2.status_code}")
+        print("--------------------------------")
+    except Exception as e:
+        print(f"Ping error: {e}")
+
+# Backend URL
 WEBHOOK_URL = "https://dana-test-v.onrender.com/chat"
-MAX_RETRIES = 5
-RETRY_DELAY = 20  # seconds
 
-def send_chat_request(payload):
-    for attempt in range(MAX_RETRIES):
-        try:
-            response = requests.post(WEBHOOK_URL, json=payload, timeout=30)
-            
-            # Check for successful response
-            if response.status_code == 200:
-                return response, None
-            
-            # Log non-200 status codes
-            st.warning(f"Attempt {attempt + 1}: Non-200 status code: {response.status_code}")
-        
-        except requests.exceptions.RequestException as e:
-            st.warning(f"Attempt {attempt + 1}: Connection error - {e}")
-        
-        # Exponential backoff
-        time.sleep(RETRY_DELAY * (attempt + 1))
-    
-    return None, "Failed to connect after multiple attempts"
-
-# Initialize session state
+# Initialize session state if not already present
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "conversation_id" not in st.session_state:
@@ -44,8 +34,11 @@ def display_chat():
                 pdf_url = st.session_state.pdf_urls[i]
                 st.markdown(f"[researched info⬇️]({pdf_url})", unsafe_allow_html=True)
 
+# Display chat history
 display_chat()
+ping_server()
 
+# Get user input
 user_input = st.chat_input("Enter your message here")
 if user_input:
     index = len(st.session_state.messages)  # Track index for PDF linking
@@ -56,19 +49,20 @@ if user_input:
     if st.session_state.conversation_id:
         payload["conversation_id"] = st.session_state.conversation_id
     
-    with st.spinner("Connecting and processing your request..."):
-        response, error = send_chat_request(payload)
+    with st.spinner("Looking for relevant stuff..."):
+        response = requests.post(WEBHOOK_URL, json=payload)
+    
+    if response.status_code == 200:
+        json_response = response.json()
+        ai_message = json_response.get("response", "Sorry, no response was generated.")
+        st.session_state.conversation_id = json_response.get("conversation_id", st.session_state.conversation_id)
+        st.session_state.messages.append({"role": "assistant", "content": ai_message})
         
-        if response:
-            json_response = response.json()
-            ai_message = json_response.get("response", "Sorry, no response was generated.")
-            st.session_state.conversation_id = json_response.get("conversation_id", st.session_state.conversation_id)
-            st.session_state.messages.append({"role": "assistant", "content": ai_message})
-            
-            agents_conv_pdf_url = json_response.get("agents_conv_pdf_url")
-            if agents_conv_pdf_url:
-                st.session_state.pdf_urls[index] = agents_conv_pdf_url
-        else:
-            st.error(error)
+        # Check if agents_conv_pdf_url is available
+        agents_conv_pdf_url = json_response.get("agents_conv_pdf_url")
+        if agents_conv_pdf_url:
+            st.session_state.pdf_urls[index] = agents_conv_pdf_url
+    else:
+        st.error(f"Error: {response.status_code} - {response.text}")
     
     st.rerun()
