@@ -7,6 +7,15 @@ MAX_RETRIES = 5
 RETRY_DELAY = 20  # seconds
 
 def send_chat_request(payload):
+    """
+    Attempt to send chat request with multiple retries
+    
+    Args:
+        payload (dict): Request payload
+    
+    Returns:
+        tuple: (response, error)
+    """
     for attempt in range(MAX_RETRIES):
         try:
             response = requests.post(WEBHOOK_URL, json=payload, timeout=30)
