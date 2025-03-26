@@ -11,6 +11,7 @@ ENV/
 .secrets.toml
 
 .vscode
+.vercel
 
 # IDE / Editor files
 .vscode/
