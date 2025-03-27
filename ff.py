@@ -13,8 +13,6 @@ def ping_server():
     except Exception as e:
         print(f"Ping error: {e}")
 
-
-
 # Backend URL
 WEBHOOK_URL = "https://deploy-dana-production.up.railway.app/chat"
 
