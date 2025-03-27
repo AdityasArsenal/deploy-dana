@@ -50,6 +50,7 @@ def agentic_flow(user_prompt,conversation_id):
     #print(f"🔵chunks used:  {context_chunks}")
     print(f"🔴  MODEL : {final_response}")
     
+    
     return final_response, context_chunks, agents_conv_pdf_url
 
 @app.post("/chat")

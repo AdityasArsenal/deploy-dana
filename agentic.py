@@ -5,7 +5,7 @@ import uuid
 from conv_handleing import agents_conv_history, inserting_agent_chat_buffer, monolog, get_best_worker_response, agents_total_conv_history
 from conv_to_pdf import conversation_to_pdf, upload_pdf_to_blob
 
-limit_subquestions = 5
+limit_subquestions = 3
 
 director_system_prompt = """
 #Role :
@@ -223,6 +223,7 @@ def director(
     
     # Save the conversation to PDF
     output_dir="conversation_pdfs"
+
 
     agents_total_conversation_history = agents_total_conv_history(conversation_id, connection, chat_history_retrieval_limit)
     #pdf_path = conversation_to_pdf(agents_conversation_history)
