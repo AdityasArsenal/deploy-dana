@@ -222,7 +222,6 @@ def director(
     monolog(agents_conversation_history)
     
     # Save the conversation to PDF
-    direcotr_response = "director response _D"
     output_dir="conversation_pdfs"
 
     agents_total_conversation_history = agents_total_conv_history(conversation_id, connection, chat_history_retrieval_limit)
