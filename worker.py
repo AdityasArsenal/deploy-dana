@@ -14,7 +14,7 @@ def worker(
     azure_search_index, 
     azure_search_api_key,
 ):
-    return "worker responded", ["","",""]
+    # return "worker responded", ["","",""]
 
     completion = client.chat.completions.create(
         model=deployment,

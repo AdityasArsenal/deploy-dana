@@ -83,8 +83,8 @@ azure_search_index = os.getenv("AZURE_AI_SEARCH_INDEX")
 azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
 
 # Blob storage
-container_name = os.getenv("BLOB_CONTAINER_NAME")
-connection_string = os.getenv("BLOB_CONNECTION_STRING")
+container_name ="agents-cov-pdfs"
+connection_string="DefaultEndpointsProtocol=https;AccountName=blobbstore;AccountKey=qqF2JuEaHoDqHZkVrr26Sg4Bpj61HP4lZRskMmgGaUgRkBwA6SbyaQ+PDQr47ykytN9yXWMfPULr+AStdLs2AQ==;EndpointSuffix=core.windows.net"
 
 def manager(
     client,
