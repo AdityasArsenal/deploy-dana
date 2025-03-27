@@ -16,7 +16,7 @@ def ping_server():
 
 
 # Backend URL
-WEBHOOK_URL = "https://dana-test-v.onrender.com/chat"
+WEBHOOK_URL = "https://deploy-dana-production.up.railway.app/chat"
 
 # Initialize session state if not already present
 if "messages" not in st.session_state:
