@@ -35,7 +35,7 @@ def markdown_to_reportlab(text):
     
     return text
 
-def conversation_to_pdf(conversation_history, direcotr_response,output_dir="conversation_pdfs"):
+def conversation_to_pdf(conversation_history, direcotr_response,output_dir="./conversation_pdfs"):
 
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):

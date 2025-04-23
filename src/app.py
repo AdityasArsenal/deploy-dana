@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import uuid
@@ -14,6 +15,23 @@ from conv_to_pdf import conversation_to_pdf
 
 load_dotenv(override=False)
 app = FastAPI()
+
+# Add CORS middleware
+origins = [
+    "http://localhost", # Allow localhost
+    "http://localhost:5173", # Allow Vite default port
+    "http://localhost:3000", # Allow common React dev port
+    # Add the deployed frontend URL here if applicable
+    # "https://your-frontend-domain.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins, # List of allowed origins
+    allow_credentials=True,
+    allow_methods=["*"], # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"], # Allow all headers
+)
 
 # Extend the ChatRequest to optionally include a conversation_id
 class ChatRequest(BaseModel):
