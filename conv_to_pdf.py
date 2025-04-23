@@ -67,13 +67,26 @@ def conversation_to_pdf(conversation_history, direcotr_response,output_dir="conv
         fontSize=12,
         textColor=colors.black
     )
-    
+
+    discription_style = ParagraphStyle(
+    'DiscriptionStyle',
+    parent=styles['BodyText'],
+    spaceBefore=6,
+    fontSize=8,
+    textColor=colors.gray
+    )
+
     story = []
     
     # Add title
     title_style = styles["Title"]
-    story.append(Paragraph("The the topics we discussed ", title_style))
+    story.append(Paragraph("Generated Report for your Analysis", title_style))
     story.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles["Normal"]))
+    
+    story.append(Paragraph(
+        """(Generated Report for your Analysis:
+            This report gives a glimpse of what happened in the backend after you asked your query to the demo tool. The questions below are the broken-down queries that Manager Agent created from your original query. And the answers are that the generated response by the Worker Agent after he retrieved the data from the vector database. The Director Agent collects this report and then responds to your original query, which is added as summary at the end of this report.)""", discription_style))
+    
     story.append(Spacer(1, 0.25*inch))  # Add space
     
     # Format conversation as numbered Q&A pairs
