@@ -21,6 +21,9 @@ origins = [
     "http://localhost", # Allow localhost
     "http://localhost:5173", # Allow Vite default port
     "http://localhost:3000", # Allow common React dev port
+    "https://www.esgai.space/", # Add your Vercel URL here
+    "https://www.esgai.space",
+    "https://deploy-dana-frontend-woj6-git-main-adityasarsenals-projects.vercel.app/"
     # Add the deployed frontend URL here if applicable
     # "https://your-frontend-domain.com",
 ]
