@@ -1,5 +1,9 @@
 from azure.storage.blob import BlobServiceClient
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 def upload_folder_to_blob(folder_path):
     connection_string = "DefaultEndpointsProtocol=https;AccountName=blobbstore;AccountKey=VMaB7g29Bzjz08nhva9ENFG0stLfycm4Y7Q0jTsts/i+z0AEupZkQo6GONStpNpV+VcNdm0LGWL3+AStyW8pYg==;EndpointSuffix=core.windows.net"
