@@ -5,6 +5,8 @@ import uuid
 from conv_handleing import agents_conv_history, inserting_agent_chat_buffer, monolog, get_best_worker_response, agents_total_conv_history
 from conv_to_pdf import conversation_to_pdf, upload_pdf_to_blob
 from dotenv import load_dotenv
+from azure.search.documents import SearchClient
+from azure.core.credentials import AzureKeyCredential
 
 # Construct the path to the .env file in the same directory as app.py
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -12,7 +14,8 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 # Load the .env file from the specified path
 load_dotenv(dotenv_path=dotenv_path, override=False)
 
-limit_subquestions = 10
+limit_subquestions = 1
+top_k = 5
 
 director_system_prompt = """
 #Role :
@@ -72,6 +75,12 @@ Governance KPIs like: PercentageOfInputsWereSourcedSustainably, TotalNumberOfBoa
 International Sustainability Reports may contain informations like: Report Title & Subtitle, Approach to Sustainable Development, Purpose and Ambition (e.g., Net Zero Vision), Summary and Introduction, Leadership & Messages, Message from the Chairman/CEO, Message from the Lead Independent Director/Executive Leadership, Governance, Strategy & Oversight, Governance Overview and Board Structure, Committee Structures (e.g., Audit, Compensation, Strategy & CSR), Sustainability Strategy & Roadmap, Materiality, Stakeholder Engagement & Risk Management, Climate-Related and Business Risk Assessment, Climate Change & Energy Transition, Decarbonization Journey / Accelerating Decarbonization, Greenhouse Gas (GHG) Emissions Reduction (Scope 1, 2, & 3), Energy Transition Initiatives & Low-Carbon Energy Strategies, Carbon Pricing and Investment in Energy Efficiency, Climate Impact, Scenario Analysis & Global Challenges, Global Issues (e.g., COP, international climate actions), Operational & Sector-Specific Initiatives, Oil & Gas Operations (Low-emission Assets & Emission Reductions), Gas as a Transition Fuel (Including LNG, Methane Reduction, Geological Storage), Electricity & Renewable Energy (Capacity Build-up, Integrated Power, Electric Mobility), Low-Carbon Fuels and Innovative Energy Solutions (e.g., Sustainable Aviation Fuel, Biofuels), Energy Efficiency Plans & Investment Strategies, Environmental Stewardship, Biodiversity, Water Management & Circular Economy, Environmental Protection and Resource Efficiency, Waste Reduction, Recycling & Circular Management Initiatives, Social Responsibility & Human Capital, People, Communities and Human Rights, Employee Well-being, Health, Safety, and Diversity, Talent Management, Engagement & Inclusion, Community Investment, Social Impact & Local Engagement, Ethical Practices, Transparency & Anti-Corruption, Performance Measurement & Reporting, Key Performance Indicators (KPIs) & Metrics (Emissions, Energy Production/Sales, etc.), Data, Benchmarking & Third-Party Evaluation, Reporting Methodologies, Assurance & Regulatory Disclosures, Taxonomy of Sustainability and Transition Metrics, Future Outlook & Strategic Investments, Near-term Objectives (e.g., 2030 Targets), Long-term Vision (e.g., 2050 Net Zero Ambition), Strategic Investments & Portfolio Resilience, Research, Innovation & Technological Advancements, Just Transition and Social Equity Initiatives, Supplementary & Additional Sections, Case Studies, Regional/Market Focus & "Focus" Sections, Stories and Examples from Sustainability Programs, Appendices, Glossary and Methodological Notes, Integration of Sustainability into Financial & Extra-Financial Performance, Variable Compensation Tied to Sustainability Objectives
 """
 
+worker_system_prompt = """
+#Role :You are an ESG consultant with 10-years of experience in India’s BRSR standards and International GRI standards. You have a deep understanding of sustainability consulting, BRSR reporting, XBRL reporting, sustainability reporting, GRI guidelines etc. As an expert in ESG consulting, you know what information is generally available inside the XBRL Datasheets; Indian BRSR and Sustainability Reports; and also in global GRI-standard sustainability reports.
+Your task is to understand the question first and then create a well-structured answer using the information chunks provided from the data source to you. Your answer must always contain all the relevant qualitative and quantitative information that you find inside these chunks. If the chunks do not contain the exact information required to answer the question directly then try to provide the closest information that you can from the provided chunks. Always answer with well structured and clear bullet points having both qualitative and quantitative data.
+"""
+
+
 # Azure AI Search configuration
 azure_search_endpoint = os.getenv("AZURE_AI_SEARCH_ENDPOINT")
 azure_search_index = os.getenv("AZURE_AI_SEARCH_INDEX")
@@ -80,6 +89,9 @@ azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
 # Blob storage
 container_name ="agents-cov-pdfs"
 connection_string="DefaultEndpointsProtocol=https;AccountName=blobbstore;AccountKey=qqF2JuEaHoDqHZkVrr26Sg4Bpj61HP4lZRskMmgGaUgRkBwA6SbyaQ+PDQr47ykytN9yXWMfPULr+AStdLs2AQ==;EndpointSuffix=core.windows.net"
+
+#Azure AI search client
+search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
 def manager(
     client,
@@ -160,7 +172,7 @@ def manager(
 
         # print(f"sub-quetions : {sub_question}")
 
-        worker_response, context_chunks =  worker(client, deployment, sub_question, agents_conversation_history, azure_search_endpoint, azure_search_index, azure_search_api_key)
+        worker_response, context_chunks =  worker(client, deployment, sub_question, agents_conversation_history, search_client, worker_system_prompt, top_k)
         inserting_agent_chat_buffer(agents_conversation_id, conversation_id, connection, sub_question, worker_response, context_chunks)# chuncks used by worker agent
 
         all_context_chunks.extend(context_chunks)            #list of lists

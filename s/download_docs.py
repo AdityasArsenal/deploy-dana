@@ -2,10 +2,7 @@ import requests
 import os
 from openpyxl import load_workbook
 
-num_of_xmls = 3
-num_of_brsr = 3
-
-def download_xml_files(file_path) -> None:
+def download_xml_files(file_path, folder_name, limit) -> None:
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
@@ -25,11 +22,11 @@ def download_xml_files(file_path) -> None:
         brsr_urls.append((ws["D"][i].value))
 
     for i, (xml_url, brsr_url) in enumerate(zip(xml_urls, brsr_urls), 0):
-        if i == num_of_xmls:                                             
+        if i == limit:                                             
           break
         try:
             # Create company-specific folder
-            company_folder = os.path.join('company_files', company_names[i])
+            company_folder = os.path.join(f'{folder_name}', company_names[i])
             os.makedirs(company_folder, exist_ok=True)
             
             xml_filename = os.path.join(company_folder, f"{company_names[i]}.xml")
@@ -37,7 +34,7 @@ def download_xml_files(file_path) -> None:
             xml_file_names.append(xml_filename)
             brsr_file_names.append(brsr_filename)
 
-            print(f"Downloading files for {company_names[i]} ({i+1} of {num_of_xmls})...")
+            print(f"Downloading files for {company_names[i]} ({i+1} of {limit})...")
             xml_response = requests.get(xml_url, headers=headers)
             brsr_response = requests.get(brsr_url, headers=headers)     
 
@@ -50,11 +47,9 @@ def download_xml_files(file_path) -> None:
             with open(brsr_filename, "wb") as f:
                 f.write(brsr_response.content)
 
-            print(f"Downloaded files for {company_names[i]} ({i+1} of {num_of_xmls})...")
+            print(f"Downloaded files for {company_names[i]} ({i+1} of {limit})...")
 
         except requests.RequestException as e:
             print(f"❌ Error downloading files for {company_names[i]}: {str(e)}")
     
     return company_names
-
-download_xml_files("../docs/All_xml_links.xlsx")

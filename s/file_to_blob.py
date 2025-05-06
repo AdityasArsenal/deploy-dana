@@ -1,20 +1,13 @@
-from azure.storage.blob import BlobServiceClient
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-
-def upload_folder_to_blob(folder_path):
-    connection_string = "DefaultEndpointsProtocol=https;AccountName=blobbstore;AccountKey=VMaB7g29Bzjz08nhva9ENFG0stLfycm4Y7Q0jTsts/i+z0AEupZkQo6GONStpNpV+VcNdm0LGWL3+AStyW8pYg==;EndpointSuffix=core.windows.net"
-    container_name = "companiesdataaa"
+def upload_folder_to_blob(connection_string, blob_container_name, company_folder, container_client):
     
     # Get folder name for virtual folder and remove spaces
-    folder_name = os.path.basename(folder_path).replace(" ", "")
-    virtual_folder = f"{folder_name}/"  # Ends with a slash
-
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-    container_client = blob_service_client.get_container_client(container_name)
+    company_folder = os.path.basename(company_folder).replace(" ", "")
+    virtual_folder = f"{company_folder}/"  # Ends with a slash
 
     try:
         container_client.create_container()
@@ -27,8 +20,8 @@ def upload_folder_to_blob(folder_path):
 
     uploaded_urls = []
     # Upload all files from the folder
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
+    for filename in os.listdir(company_folder):
+        file_path = os.path.join(company_folder, filename)
         if os.path.isfile(file_path):
             # Remove spaces from filename
             blob_name = filename.replace(" ", "")
@@ -40,22 +33,10 @@ def upload_folder_to_blob(folder_path):
             
             # Get the proper URL for the uploaded blob
             uploaded_urls.append(blob_client.url)
-            print(f"Uploaded {filename} as {blob_name} to {container_name}/{virtual_folder}")
+            print(f"Uploaded {filename} as {blob_name} to {blob_container_name}/{virtual_folder}")
             print(f"URL: {blob_client.url}")
 
     return uploaded_urls
 
 
 # Example usage:
-
-parent_folder_path = "company_files"
-file_paths = []
-
-for filename in os.listdir(parent_folder_path):
-    file_path = os.path.join(parent_folder_path, filename)
-    urls = []
-
-    file_paths.append(file_path)
-    urls.append(upload_folder_to_blob(file_path))
-
-    print(f"Uploaded files from {filename} /n and URLs: {urls}/n")

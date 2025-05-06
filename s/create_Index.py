@@ -82,14 +82,3 @@ def create_search_index(endpoint, api_key, index_name):
 
     print(f"res : {result}")
     print(f"Index {index_name} created successfully.")
-
-if __name__ == "__main__":
-
-    endpoint = os.getenv("AI_SEARCH_ENDPOINT")
-    api_key = os.getenv("AI_SEARCH_API_KEY")
-
-    print(f"endpoint : {endpoint}")
-
-    index_name = "kliuuuuuuuuuuuuuuutllllllllllllllllllliutyilyuliyuh"
-    create_search_index(endpoint, api_key, index_name)
-
