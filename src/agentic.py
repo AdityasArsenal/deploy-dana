@@ -14,7 +14,7 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 # Load the .env file from the specified path
 load_dotenv(dotenv_path=dotenv_path, override=False)
 
-limit_subquestions = 1
+limit_subquestions = 2
 top_k = 5
 
 director_system_prompt = """
@@ -61,12 +61,13 @@ Sustainability Report generally contains:
 -Industrial Harmony, -Diversity and Equal Opportunity, -Health and Safety, -Safety Management, -Safety in Transportation, -Advancing Health and Well-being, -Safety and Security of Critical Assets, -Building Lasting Relationships, -Customer Satisfaction, -Quality Management Systems, -Customer-centric Initiatives, -Engaging with the Local Communities, -Fostering Shared Prosperity, -Lives Touched Through CSR Projects, -Economic Performance, -Focusing on Sustainable Returns, -Alignment of Business Practices, -Helping Achieve UN Sustainable Development Goals, -India's Nationally Determined Contributions (NDCs), -UNGC Principles, -Task Force on Climate-related Financial Disclosures, -Independent Assurance Statement, -GRI Content Index, -List of Abbreviations
 
 Currently there are only following companies available to the worker agent in the Database:
-1. Hindustan Petroleum Corporation Limited (HPCL)
-2. Indian Oil Corporation Limited (IOCL)
+1. Hindustan Petroleum Corporation Limited
+2. Indian Oil Corporation Limited 
 
 Response Format in json
 Return your evaluation strictly in JSON format with the following keys:
 "list_of_sub_questions": A python list of sub-questions.
+"company_names": A python list of just exact company names no abbreviations that the user asked.
 
 XBRL Datasheets may contain the following KPIs: 
 Environmental KPIs like: WhetherDetailsOfGreenHouseGasEmissionsAndItsIntensityIsApplicableToTheCompany, TotalScope1Emissions, TotalScope2Emissions, TotalScope3Emissions, TotalScope1EndScope2EmissionsPerRupeeOfTurnover, TotalWasteGenerated, TotalWasteDisposed, WasteDisposedByLandfilling, WasteDisposedByIncineration, Ewaste, BatteryWaste, PlasticWaste, BioMedicalWaste, RadioactiveWaste, OtherHazardousWaste, ConstructionAndDemolitionWaste, OtherNonHazardousWasteGenerated, WasteIntensityPerRupeeOfTurnover, TotalWasteRecovered, AmountOfReUsed, WasteRecoveredThroughReUsed, AmountOfRecycled, WasteRecoveredThroughRecycled, TotalWaterDischargedInKilolitres, WaterWithdrawalByGroundwater, WaterWithdrawalBySurfaceWater, WaterWithdrawalByThirdPartyWater, TotalVolumeOfWaterConsumption, TotalWaterDischargedInKilolitres, WaterDischargeToGroundwaterWithOutTreatment, WaterDischargeToSurfaceWaterWithTreatment, WaterDischargeToSurfaceWaterWithOutTreatment, WaterDischargeToSeawaterWithTreatment, WaterDischargeToSeawaterWithOutTreatment, WaterDischargeToOthersWithTreatment, WaterDischargeToOthersWithoutTreatment, WasteRecoveredThroughRecycled, WaterIntensityPerRupeeOfTurnover, TotalEnergyConsumedFromRenewableAndNonRenewableSources, TotalEnergyConsumedFromRenewableSources, TotalEnergyConsumedFromNonRenewableSources, EnergyIntensityPerRupeeOfTurnover
@@ -163,7 +164,10 @@ def manager(
     
     agent_response = json.loads(manager_json_output) # Parse the JSON response ecplicitly asked
     list_of_sub_questions =agent_response["list_of_sub_questions"]
+    company_names = agent_response["company_names"]
     print(f"number of sub-questions {len(list_of_sub_questions)}")
+    print(f"company_names: {company_names}")
+
     all_context_chunks = []
     i = 0
 
@@ -172,7 +176,7 @@ def manager(
 
         # print(f"sub-quetions : {sub_question}")
 
-        worker_response, context_chunks =  worker(client, deployment, sub_question, agents_conversation_history, search_client, worker_system_prompt, top_k)
+        worker_response, context_chunks =  worker(client, deployment, sub_question, company_names, agents_conversation_history, search_client, worker_system_prompt, top_k)
         inserting_agent_chat_buffer(agents_conversation_id, conversation_id, connection, sub_question, worker_response, context_chunks)# chuncks used by worker agent
 
         all_context_chunks.extend(context_chunks)            #list of lists

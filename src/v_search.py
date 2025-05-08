@@ -4,7 +4,7 @@ from azure.search.documents import SearchClient
 def semantic_hybrid_search(
     query: str,
     search_client: SearchClient,
-    top: int = 3,
+    top: int = 5,
     company_name: str = ""
 ) -> list[str]:
     """
@@ -28,6 +28,7 @@ def semantic_hybrid_search(
     )
 
     #filtering the results based on the company name and then vector search
+    print(company_name)
     titlename1 = f"{company_name}.xml"
     titlename2 = f"{company_name}.pdf"
 
@@ -51,15 +52,15 @@ def semantic_hybrid_search(
     chunks = [doc["chunk"] for doc in docs]
     titles = [doc["title"] for doc in docs]
 
-    # x=0
-    # p=0
-    # for i in titles:
-    #     if i == f"{titlename1}":
-    #         x+=1
-    #     elif i == f"{titlename2}":
-    #         p+=1
-    # print("xmls: ",x)
-    # print("pdfs: ",p)
+    x=0
+    p=0
+    for i in titles:
+        if i == f"{titlename1}":
+            x+=1
+        elif i == f"{titlename2}":
+            p+=1
+    print("xmls: ",x)
+    print("pdfs: ",p)
     return chunks, titles
 
     # j = 0
@@ -70,20 +71,25 @@ def semantic_hybrid_search(
     #     print("===============chunk:=================")
 
 
-import os
-from dotenv import load_dotenv
-from azure.core.credentials import AzureKeyCredential
+# import os
+# from dotenv import load_dotenv
+# from azure.core.credentials import AzureKeyCredential
 
-load_dotenv()
+# load_dotenv()
 
-azure_search_endpoint = "https://vectors-of-all-companies.search.windows.net"
-azure_search_index = "new-vector-index"
-azure_search_api_key = "ADD API KEY HERE"
+# azure_search_endpoint = "https://vectors-of-all-companies.search.windows.net"
+# azure_search_index = "new-vector-index"
+# azure_search_api_key = "ADD API KEY HERE"
 
-#Azure AI search client
-search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key),company_name="IndraprasthaGasLimited")
+# #Azure AI search client
+# search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
-query = "what is  ReligareEnterprisesLimited's gas production"
-top_k = 50
+# query = "what is  ReligareEnterprisesLimited's gas production"
+# top_k = 10
+# company_name="ReligareEnterprisesLimited"
 
-chunks, titles = semantic_hybrid_search(query, search_client, top_k)
+# chunks, titles = semantic_hybrid_search(query, search_client, top_k, company_name)
+
+# print(chunks)
+# print(titles)
+

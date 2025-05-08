@@ -4,6 +4,7 @@ def worker(
     client,
     deployment,
     sub_question,
+    company_names,
     agents_conversation_history,
     search_client,
     system_prompt,
@@ -11,7 +12,7 @@ def worker(
 ):
     # return "worker responded", ["","",""]
 
-    context_chunks, titles = semantic_hybrid_search(sub_question, search_client, top_k)
+    context_chunks, titles = semantic_hybrid_search(sub_question, search_client, top_k, company_names)
 
     user_message_with_context = f"My question: {sub_question}\n\nRelevant information:: {context_chunks}"
 
