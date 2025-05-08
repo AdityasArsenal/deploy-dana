@@ -10,13 +10,12 @@ ai_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
 ai_search_api_key = os.getenv("AI_SEARCH_API_KEY")
 blob_conn_string = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
 
-print(blob_conn_string)
-
 idxr_client = SearchIndexerClient(ai_search_endpoint, AzureKeyCredential(ai_search_api_key))
 
-ds_container = SearchIndexerDataContainer(name="companiesdataaa", query="*")
+ds_container = SearchIndexerDataContainer(name="companiesdataaa")
 ds_connection = SearchIndexerDataSourceConnection(
-    name="companydata-blob",
+    name="companydata-blob-datasourcee",
+    description="Azure Blob Storage connection to indexer",
     type="azureblob",
     connection_string=blob_conn_string,
     container=ds_container

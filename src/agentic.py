@@ -85,13 +85,13 @@ Your task is to understand the question first and then create a well-structured 
 azure_search_endpoint = os.getenv("AZURE_AI_SEARCH_ENDPOINT")
 azure_search_index = os.getenv("AZURE_AI_SEARCH_INDEX")
 azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
+#Azure AI search client
+search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
 # Blob storage
 container_name ="agents-cov-pdfs"
 connection_string="DefaultEndpointsProtocol=https;AccountName=blobbstore;AccountKey=qqF2JuEaHoDqHZkVrr26Sg4Bpj61HP4lZRskMmgGaUgRkBwA6SbyaQ+PDQr47ykytN9yXWMfPULr+AStdLs2AQ==;EndpointSuffix=core.windows.net"
 
-#Azure AI search client
-search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
 def manager(
     client,

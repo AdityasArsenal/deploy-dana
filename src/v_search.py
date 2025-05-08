@@ -5,7 +5,7 @@ def semantic_hybrid_search(
     query: str,
     search_client: SearchClient,
     top: int = 3,
-    company_name: str = "HPCL"
+    company_name: str = ""
 ) -> list[str]:
     """
     Perform a hybrid search (text + vector) and return the top chunks.
@@ -27,18 +27,19 @@ def semantic_hybrid_search(
         exhaustive=True
     )
 
-    print(search_client._index_name)
-    print(query)
+    #filtering the results based on the company name and then vector search
+    titlename1 = f"{company_name}.xml"
+    titlename2 = f"{company_name}.pdf"
 
-    parent_filter = f"companyName eq '{company_name}'"
+    parent_filter = f"search.in(title, '{titlename1},{titlename2}')"
 
     # 2) Execute a hybrid search: full‐text + vector in one call :contentReference[oaicite:1]{index=1}
     results = search_client.search(
-        search_text=query,             # your keyword text query
-        vector_queries=[vec_q],        # plus this vector subquery
-        query_type=QueryType.SIMPLE,   # SIMPLE lets you mix text & vector ◆
-        select=["title", "chunk"],              # only retrieve the ‘chunk’ field
-        filter=parent_filter,                     # apply before k‑NN
+        search_text=query,            
+        vector_queries=[vec_q],       
+        query_type=QueryType.SIMPLE,  
+        select=["title", "chunk","companyName"], 
+        filter=parent_filter,                    
         vector_filter_mode=VectorFilterMode.PRE_FILTER,
         top=top
     )
@@ -50,10 +51,15 @@ def semantic_hybrid_search(
     chunks = [doc["chunk"] for doc in docs]
     titles = [doc["title"] for doc in docs]
 
-    print("===============titles:=================")
-    print(titles)
-    print("===============titles:=================")
-
+    # x=0
+    # p=0
+    # for i in titles:
+    #     if i == f"{titlename1}":
+    #         x+=1
+    #     elif i == f"{titlename2}":
+    #         p+=1
+    # print("xmls: ",x)
+    # print("pdfs: ",p)
     return chunks, titles
 
     # j = 0
@@ -70,14 +76,14 @@ from azure.core.credentials import AzureKeyCredential
 
 load_dotenv()
 
-azure_search_endpoint = os.getenv("AZURE_AI_SEARCH_ENDPOINT")
-azure_search_index = os.getenv("AZURE_AI_SEARCH_INDEX")
-azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
+azure_search_endpoint = "https://vectors-of-all-companies.search.windows.net"
+azure_search_index = "new-vector-index"
+azure_search_api_key = "ADD API KEY HERE"
 
 #Azure AI search client
-search_client = SearchClient(endpoint = azure_search_endpoint, index_name = "vector-db-free-hpcl-iocl", credential = AzureKeyCredential(azure_search_api_key))
+search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key),company_name="IndraprasthaGasLimited")
 
-query = "what carbon emission is HPCL"
-top_k = 5
+query = "what is  ReligareEnterprisesLimited's gas production"
+top_k = 50
 
-semantic_hybrid_search(query, search_client, top_k)
+chunks, titles = semantic_hybrid_search(query, search_client, top_k)
