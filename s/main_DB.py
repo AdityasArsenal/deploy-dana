@@ -11,35 +11,25 @@ load_dotenv()
 
 # download the docs
 parent_folder_name = "company_files" #to save all the docs
-limit = 10 #limit the number of docs to download
-
-company_names = download_xml_files("docs/All_xml_links.xlsx", parent_folder_name, limit)
-
-
+destination_folder_name = "company_files" #to upload the docs to blob storage
+limit = 2000 #limit the number of docs to download
 
 #upload the docs to blob storage
 connection_string = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
 blob_container_name = "companiesdataaa"
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 container_client = blob_service_client.get_container_client(blob_container_name)
-urls_of_files_uploaded = [] # all the urls of the files uploaded
 
-for company in os.listdir(parent_folder_name):
-    company_folder = os.path.join(parent_folder_name, company)
+company_names, xml_file_names, brsr_file_names, urls_of_files_uploaded, all_uploaded_blobs = download_xml_files("docs/All_xml_links.xlsx", destination_folder_name, parent_folder_name, limit, blob_container_name, container_client)
 
-    urls = upload_folder_to_blob(blob_container_name, company_folder, container_client)
-
-    urls_of_files_uploaded.extend(urls)
-    
-    print(f"Uploaded file from {company} to blob storage /n URLs is : {urls}/n")
+def count_blobs_in_container(container_client):
+    blob_list = container_client.list_blobs()
+    return len(list(blob_list))
 
 
 
-#create the index
-# index_name = "new-vector-index"
-# endpoint = os.getenv("AI_SEARCH_ENDPOINT")
-# api_key = os.getenv("AI_SEARCH_API_KEY")
+number_of_blobs = count_blobs_in_container(container_client)
+print(f"Number of blobs in the container: {number_of_blobs}")
 
-# create_search_index(endpoint, api_key, index_name)
 
 

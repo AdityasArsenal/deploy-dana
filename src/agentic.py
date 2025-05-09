@@ -8,14 +8,10 @@ from dotenv import load_dotenv
 from azure.search.documents import SearchClient
 from azure.core.credentials import AzureKeyCredential
 
-# Construct the path to the .env file in the same directory as app.py
-dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv()
 
-# Load the .env file from the specified path
-load_dotenv(dotenv_path=dotenv_path, override=False)
-
-limit_subquestions = 2
-top_k = 5
+limit_subquestions = 10 # maximum number of sub-questions to be created by manager agent
+top_k = 10 # number of chunks to be used by worker agent
 
 director_system_prompt = """
 #Role :
@@ -63,11 +59,21 @@ Sustainability Report generally contains:
 Currently there are only following companies available to the worker agent in the Database:
 1. Hindustan Petroleum Corporation Limited
 2. Indian Oil Corporation Limited 
+3. BFUTILITIESLIMITED
+4. FutureConsumerLimited
+5. GilletteIndiaLimited
+6. IndraprasthaGasLimited
+7. JEENASIKHOLIFECARELIMITED
+8. Network18Media&InvestmentsLimited
+9. Procter&GambleHealthLimited
+10. Procter&GambleHygieneandHealthCareLimited
+11. ReligareEnterprisesLimited
+12. SiemensLimited
 
 Response Format in json
 Return your evaluation strictly in JSON format with the following keys:
 "list_of_sub_questions": A python list of sub-questions.
-"company_names": A python list of just exact company names no abbreviations that the user asked.
+"company_names": A python list of just exact company names no abbreviations which are in the sub-questions.
 
 XBRL Datasheets may contain the following KPIs: 
 Environmental KPIs like: WhetherDetailsOfGreenHouseGasEmissionsAndItsIntensityIsApplicableToTheCompany, TotalScope1Emissions, TotalScope2Emissions, TotalScope3Emissions, TotalScope1EndScope2EmissionsPerRupeeOfTurnover, TotalWasteGenerated, TotalWasteDisposed, WasteDisposedByLandfilling, WasteDisposedByIncineration, Ewaste, BatteryWaste, PlasticWaste, BioMedicalWaste, RadioactiveWaste, OtherHazardousWaste, ConstructionAndDemolitionWaste, OtherNonHazardousWasteGenerated, WasteIntensityPerRupeeOfTurnover, TotalWasteRecovered, AmountOfReUsed, WasteRecoveredThroughReUsed, AmountOfRecycled, WasteRecoveredThroughRecycled, TotalWaterDischargedInKilolitres, WaterWithdrawalByGroundwater, WaterWithdrawalBySurfaceWater, WaterWithdrawalByThirdPartyWater, TotalVolumeOfWaterConsumption, TotalWaterDischargedInKilolitres, WaterDischargeToGroundwaterWithOutTreatment, WaterDischargeToSurfaceWaterWithTreatment, WaterDischargeToSurfaceWaterWithOutTreatment, WaterDischargeToSeawaterWithTreatment, WaterDischargeToSeawaterWithOutTreatment, WaterDischargeToOthersWithTreatment, WaterDischargeToOthersWithoutTreatment, WasteRecoveredThroughRecycled, WaterIntensityPerRupeeOfTurnover, TotalEnergyConsumedFromRenewableAndNonRenewableSources, TotalEnergyConsumedFromRenewableSources, TotalEnergyConsumedFromNonRenewableSources, EnergyIntensityPerRupeeOfTurnover
@@ -83,15 +89,15 @@ Your task is to understand the question first and then create a well-structured 
 
 
 # Azure AI Search configuration
-azure_search_endpoint = os.getenv("AZURE_AI_SEARCH_ENDPOINT")
-azure_search_index = os.getenv("AZURE_AI_SEARCH_INDEX")
-azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
+azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
+azure_search_index = os.getenv("AI_SEARCH_INDEX")
+azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
 #Azure AI search client
 search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
 # Blob storage
 container_name ="agents-cov-pdfs"
-connection_string="DefaultEndpointsProtocol=https;AccountName=blobbstore;AccountKey=qqF2JuEaHoDqHZkVrr26Sg4Bpj61HP4lZRskMmgGaUgRkBwA6SbyaQ+PDQr47ykytN9yXWMfPULr+AStdLs2AQ==;EndpointSuffix=core.windows.net"
+connection_string=os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
 
 
 def manager(
@@ -99,24 +105,22 @@ def manager(
     deployment,
     user_prompt,
     provided_conversation_history,
-    max_iterations,
     connection,
     chat_history_retrieval_limit,
-    no_iterations,
-    context_chunks,
     conversation_id
 ):   
     
     # agents_conversation_id = str(uuid.uuid4())
 
     # list_of_sub_questions = ["wt is","why it is","how it is"]
+    # company_names = ["Tata Steel", "Tata Steel", "Tata Steel"]
     # agents_conversation_history = ""
     # all_context_chunks = []
     # i = 0
 
     # for sub_question in list_of_sub_questions:
     #     i += 1
-    #     worker_response, context_chunks =  worker(client, deployment, sub_question, agents_conversation_history, azure_search_endpoint, azure_search_index, azure_search_api_key)
+    #     worker_response, context_chunks =   worker(client, deployment, sub_question, company_names, agents_conversation_history, search_client, worker_system_prompt, top_k)
     #     inserting_agent_chat_buffer(agents_conversation_id, conversation_id, connection, sub_question, worker_response, context_chunks)# chuncks used by worker agent
 
     #     all_context_chunks.extend(context_chunks)
@@ -169,48 +173,39 @@ def manager(
     print(f"company_names: {company_names}")
 
     all_context_chunks = []
-    i = 0
 
+    i = 0
     for sub_question in list_of_sub_questions:
         i += 1
-
         # print(f"sub-quetions : {sub_question}")
 
         worker_response, context_chunks =  worker(client, deployment, sub_question, company_names, agents_conversation_history, search_client, worker_system_prompt, top_k)
         inserting_agent_chat_buffer(agents_conversation_id, conversation_id, connection, sub_question, worker_response, context_chunks)# chuncks used by worker agent
 
-        all_context_chunks.extend(context_chunks)            #list of lists
         print(f"{i}th {sub_question}")
+        all_context_chunks.extend(context_chunks)
 
-        # if i == max_iterations:
-        #     print("THE ITERATION ENDED BECAUSE : Max iterations reached")
-        #     break
-    no_iterations = i
 
     direcotr_response, conv_pdf_url = director(
         client,
         deployment,
         user_prompt,
-        provided_conversation_history, 
-        max_iterations,
+        provided_conversation_history,
         connection,
         chat_history_retrieval_limit,
-        no_iterations,
         all_context_chunks,
         agents_conversation_id,
         conversation_id
     )
-    return direcotr_response, no_iterations, context_chunks, conv_pdf_url
+    return direcotr_response, all_context_chunks, conv_pdf_url
 
 def director(
     client,
     deployment,
     user_prompt,
     provided_conversation_history,
-    max_iterations,
     connection,
     chat_history_retrieval_limit,
-    no_iterations,
     all_context_chunks,                     #list of lists
     agents_conversation_id,
     conversation_id
@@ -237,7 +232,6 @@ def director(
     
     # Save the conversation to PDF
     output_dir="conversation_pdfs"
-
 
     agents_total_conversation_history = agents_total_conv_history(conversation_id, connection, chat_history_retrieval_limit)
     #pdf_path = conversation_to_pdf(agents_conversation_history)

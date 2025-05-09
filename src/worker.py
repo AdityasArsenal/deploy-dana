@@ -40,7 +40,7 @@ def worker(
     print(f"\Message: {completion.choices[0].message}")
 
     print("===============sub :=================")
-    print(f"Sub: {sub_question}\n")
+    print(f"Sub: {sub_question} AND company names: {company_names}\n")
     print(f"user role: Previous conversation: {agents_conversation_history},\nMy question: {sub_question}")
     print("===============sub :=================")
 

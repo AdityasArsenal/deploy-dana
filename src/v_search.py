@@ -4,8 +4,8 @@ from azure.search.documents import SearchClient
 def semantic_hybrid_search(
     query: str,
     search_client: SearchClient,
-    top: int = 5,
-    company_name: str = ""
+    top: int = 10,
+    company_names: list[str] = []
 ) -> list[str]:
     """
     Perform a hybrid search (text + vector) and return the top chunks.
@@ -20,6 +20,9 @@ def semantic_hybrid_search(
         List[str]: The returned “chunk” field from each top hit.
     """
     # 1) Build the vector query for semantic similarity (vector search) :contentReference[oaicite:0]{index=0}
+    
+    print("vvvvvvvvvvvvvvvvvvv")
+    
     vec_q = VectorizableTextQuery(
         text=query,
         k_nearest_neighbors=50,
@@ -27,19 +30,42 @@ def semantic_hybrid_search(
         exhaustive=True
     )
 
+    filter_elements = []
     #filtering the results based on the company name and then vector search
-    print(company_name)
-    titlename1 = f"{company_name}.xml"
-    titlename2 = f"{company_name}.pdf"
+    if company_names and len(company_names) > 0:
+        for company_name in company_names:
+            company_name = company_name.replace(" ", "")
+            
+            print(company_name)
 
-    parent_filter = f"search.in(title, '{titlename1},{titlename2}')"
+            titlename1 = f"{company_name}.xml"
+            titlename2 = f"{company_name}.pdf"
+
+            company_name = company_name.upper()
+
+            titlename11 = f"{company_name}.xml"
+            titlename22 = f"{company_name}.pdf"
+
+            filter_elements.append(titlename1)
+            filter_elements.append(titlename2)
+            filter_elements.append(titlename11)
+            filter_elements.append(titlename22)
+
+
+        filter_string = f"search.in(title, '{','.join(filter_elements)}')"
+        print("filter_string: ",filter_string)
+        
+        parent_filter = filter_string
+
+    else:
+        parent_filter = None
 
     # 2) Execute a hybrid search: full‐text + vector in one call :contentReference[oaicite:1]{index=1}
     results = search_client.search(
         search_text=query,            
         vector_queries=[vec_q],       
         query_type=QueryType.SIMPLE,  
-        select=["title", "chunk","companyName"], 
+        select=["title", "chunk"], 
         filter=parent_filter,                    
         vector_filter_mode=VectorFilterMode.PRE_FILTER,
         top=top
@@ -52,15 +78,15 @@ def semantic_hybrid_search(
     chunks = [doc["chunk"] for doc in docs]
     titles = [doc["title"] for doc in docs]
 
-    x=0
-    p=0
-    for i in titles:
-        if i == f"{titlename1}":
-            x+=1
-        elif i == f"{titlename2}":
-            p+=1
-    print("xmls: ",x)
-    print("pdfs: ",p)
+    # which filter_element is appearing in the titles how many times
+    # x=0
+    # p=0
+    # for i in titles:
+    #     for filter_element in filter_elements:
+    #         if i == filter_element:
+    #             x+=1
+    #             print(f"{filter_element}: {x}")
+
     return chunks, titles
 
     # j = 0
@@ -77,18 +103,18 @@ def semantic_hybrid_search(
 
 # load_dotenv()
 
-# azure_search_endpoint = "https://vectors-of-all-companies.search.windows.net"
-# azure_search_index = "new-vector-index"
-# azure_search_api_key = "ADD API KEY HERE"
+# azure_search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
+# azure_search_index = os.getenv("AZURE_SEARCH_INDEX")
+# azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
 
 # #Azure AI search client
 # search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
-# query = "what is  ReligareEnterprisesLimited's gas production"
+# query = "what is BF UTILITIES LIMITED CARBON EMISSIONS"
 # top_k = 10
-# company_name="ReligareEnterprisesLimited"
+# company_names=[]
 
-# chunks, titles = semantic_hybrid_search(query, search_client, top_k, company_name)
+# chunks, titles = semantic_hybrid_search(query, search_client, top_k, company_names)
 
 # print(chunks)
 # print(titles)
