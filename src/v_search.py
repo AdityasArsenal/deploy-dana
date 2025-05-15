@@ -21,7 +21,7 @@ def semantic_hybrid_search(
     """
     # 1) Build the vector query for semantic similarity (vector search) :contentReference[oaicite:0]{index=0}
     
-    print("vvvvvvvvvvvvvvvvvvv")
+    # print("vvvvvvvvvvvvvvvvvvv")
     
     vec_q = VectorizableTextQuery(
         text=query,
@@ -36,7 +36,7 @@ def semantic_hybrid_search(
         for company_name in company_names:
             company_name = company_name.replace(" ", "")
             
-            print(company_name)
+            # print(company_name)
 
             titlename1 = f"{company_name}.xml"
             titlename2 = f"{company_name}.pdf"
@@ -53,7 +53,7 @@ def semantic_hybrid_search(
 
 
         filter_string = f"search.in(title, '{','.join(filter_elements)}')"
-        print("filter_string: ",filter_string)
+        # print("filter_string: ",filter_string)
         
         parent_filter = filter_string
 
@@ -97,25 +97,82 @@ def semantic_hybrid_search(
     #     print("===============chunk:=================")
 
 
+#Test code for single company
 # import os
 # from dotenv import load_dotenv
 # from azure.core.credentials import AzureKeyCredential
 
 # load_dotenv()
 
-# azure_search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
-# azure_search_index = os.getenv("AZURE_SEARCH_INDEX")
-# azure_search_api_key = os.getenv("AZURE_SEARCH_API_KEY")
+# azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
+# azure_search_index = os.getenv("AI_SEARCH_INDEX")
+# # azure_search_index = "test-vector-index"
+# azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
 
 # #Azure AI search client
 # search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
-# query = "what is BF UTILITIES LIMITED CARBON EMISSIONS"
+# company_names=["ITILIMITED"]
+
+# query = f"what is {company_names[0]} CARBON EMISSIONS"
 # top_k = 10
-# company_names=[]
 
 # chunks, titles = semantic_hybrid_search(query, search_client, top_k, company_names)
 
-# print(chunks)
-# print(titles)
+# for i in range(len(chunks)):
+#     print(f"\n{i}. {titles[i]} //chunk title\n")
+#     print("===============chunk:=================")
+#     print(f"## chunk: {chunks[i]}")
 
+
+##To check if  a list of companies are missing from the vector dataset
+# def verify_missing_companies(json_file_path):
+#     """
+#     Verify which companies from the JSON file are missing from the vector dataset.
+    
+#     Args:
+#         json_file_path (str): Path to the JSON file containing company names
+        
+#     Returns:
+#         dict: Dictionary with confirmed missing and found companies
+#     """
+#     # Load company names from JSON file
+#     with open(json_file_path, 'r') as file:
+#         data = json.load(file)
+    
+#     company_names = data.get('company_names', [])
+    
+#     # Set up Azure search client
+#     load_dotenv()
+#     azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
+#     azure_search_index = os.getenv("AI_SEARCH_INDEX")
+#     azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
+#     search_client = SearchClient(
+#         endpoint=azure_search_endpoint, 
+#         index_name=azure_search_index, 
+#         credential=AzureKeyCredential(azure_search_api_key)
+#     )
+    
+#     # Results storage
+#     missing_companies = []
+#     found_companies = []
+    
+#     # Check each company
+#     for company in company_names:
+#         query = f"information about {company}"
+#         company_list = [company]
+        
+#         # Use existing search function
+#         chunks, titles = semantic_hybrid_search(query, search_client, top=10, company_names=company_list)
+
+        
+#         # If no results returned, company is confirmed missing
+#         if not chunks:
+#             missing_companies.append(company)
+#         else:
+#             found_companies.append(company)
+    
+#     return {
+#         "missing_companies": missing_companies,
+#         "found_companies": found_companies
+#     }

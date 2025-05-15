@@ -206,7 +206,7 @@ def director(
     provided_conversation_history,
     connection,
     chat_history_retrieval_limit,
-    all_context_chunks,                     #list of lists
+    all_context_chunks,                     #list of lists if chunks
     agents_conversation_id,
     conversation_id
 ):

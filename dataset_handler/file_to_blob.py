@@ -41,7 +41,7 @@ def upload_folder_to_blob(blob_container_name, local_company_folder_path, contai
             blob_client = container_client.get_blob_client(full_blob_path)
             
             with open(file_path_on_disk, "rb") as data:
-                print(f"Uploading {filename} to blob storage... \n")
+                # print(f"Uploading {filename} to blob storage... \n")
                 blob_client.upload_blob(data, overwrite=True)
             
             uploaded_urls.append(blob_client.url)

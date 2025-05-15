@@ -5,7 +5,7 @@ from file_to_blob import upload_folder_to_blob
 import time
 
 
-def download_xml_files(excel_file_path, destination_folder_name, parent_folder_name, limit, blob_container_name, container_client) -> None:
+def download_files(excel_file_path, destination_folder_name, parent_folder_name, limit, blob_container_name, container_client) -> None:
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
@@ -21,8 +21,9 @@ def download_xml_files(excel_file_path, destination_folder_name, parent_folder_n
     brsr_urls = []
     xml_file_names = []
     brsr_file_names = []
+    failed_to_download_files = []
 
-    for i in range(1,len(ws["A"])): 
+    for i in range(0,len(ws["A"])): 
         company_names.append((ws["A"][i].value))
         xml_urls.append((ws["E"][i].value))
         brsr_urls.append((ws["D"][i].value))
@@ -59,8 +60,8 @@ def download_xml_files(excel_file_path, destination_folder_name, parent_folder_n
 
             print(f"Downloaded files for {company_names[i]} ({i+1} of {limit})...")
 
-            if i % 10 == 0 and i != 0:
-
+            # if i % 10 == 0 and i != 0:
+            if i == 9:
             #upload the files to blob storage after 10 files are downloaded and remove the files from the local folder after uploading to blob storage
 
                 files_removed = 0
@@ -73,9 +74,9 @@ def download_xml_files(excel_file_path, destination_folder_name, parent_folder_n
                     urls_of_files_uploaded.extend(urls_uploaded_of_this_company)
                     all_uploaded_blobs.extend(blobs_uploaded_of_this_company)
 
-                    # print(f"Uploaded file from {company} to blob storage /n URLs is : {urls_uploaded_of_this_company}/n")
+                    print(f"Uploaded file from {company} to blob storage /n URLs is : {urls_uploaded_of_this_company}/n")
 
-                    #remove the files from the local folder after uploading to blob storage
+                    # remove the files from the local folder after uploading to blob storage
                     max_retries = 3
                     retry_delay = 0.5  # seconds
 
@@ -106,6 +107,7 @@ def download_xml_files(excel_file_path, destination_folder_name, parent_folder_n
                 print(f"Removed {files_removed} files from the local folder /n")
 
         except requests.RequestException as e:
+            failed_to_download_files.append(company_names[i])
             print(f"❌ Error downloading files for {company_names[i]}: {str(e)}")
 
-    return company_names, xml_file_names, brsr_file_names, urls_of_files_uploaded, all_uploaded_blobs
+    return company_names, xml_file_names, brsr_file_names, urls_of_files_uploaded, all_uploaded_blobs, failed_to_download_files

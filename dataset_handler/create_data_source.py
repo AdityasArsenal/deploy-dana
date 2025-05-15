@@ -12,9 +12,9 @@ blob_conn_string = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
 
 idxr_client = SearchIndexerClient(ai_search_endpoint, AzureKeyCredential(ai_search_api_key))
 
-ds_container = SearchIndexerDataContainer(name="companiesdataaa")
+ds_container = SearchIndexerDataContainer(name="test-company-data")
 ds_connection = SearchIndexerDataSourceConnection(
-    name="companydata-blob-datasourcee",
+    name="test-companydata-blob-datasourcee",
     description="Azure Blob Storage connection to indexer",
     type="azureblob",
     connection_string=blob_conn_string,
