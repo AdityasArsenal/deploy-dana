@@ -1,6 +1,6 @@
 from v_search import semantic_hybrid_search
 
-def worker(
+async def worker(
     client,
     deployment,
     sub_question,
@@ -12,11 +12,11 @@ def worker(
 ):
     # return "worker responded", ["","",""]
 
-    context_chunks, titles = semantic_hybrid_search(sub_question, search_client, top_k, company_names)
+    context_chunks, titles = await semantic_hybrid_search(sub_question, search_client, top_k, company_names)
 
     user_message_with_context = f"My question: {sub_question}\n\nRelevant information:: {context_chunks}"
 
-    completion = client.chat.completions.create(
+    completion = await client.chat.completions.create(
         model=deployment,
         messages=[
             {"role": "system", "content": system_prompt},

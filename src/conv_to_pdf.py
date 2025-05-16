@@ -1,4 +1,5 @@
 import os
+import asyncio
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -35,8 +36,12 @@ def markdown_to_reportlab(text):
     
     return text
 
-def conversation_to_pdf(conversation_history, direcotr_response,output_dir="./conversation_pdfs"):
+async def conversation_to_pdf(conversation_history, direcotr_response,output_dir="./conversation_pdfs"):
+    # This function uses the reportlab library which is not async-compatible
+    # Run the CPU-intensive PDF generation in a thread pool to not block the event loop
+    return await asyncio.to_thread(_conversation_to_pdf_sync, conversation_history, direcotr_response, output_dir)
 
+def _conversation_to_pdf_sync(conversation_history, direcotr_response, output_dir):
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -127,10 +132,18 @@ def conversation_to_pdf(conversation_history, direcotr_response,output_dir="./co
     
     return filepath
 
-def upload_pdf_to_blob(pdf_path, container_name, connection_string):
+async def upload_pdf_to_blob(pdf_path, container_name, connection_string):
+    # Use a thread pool to run the synchronous blob upload
+    return await asyncio.to_thread(_upload_pdf_to_blob_sync, pdf_path, container_name, connection_string)
+
+def _upload_pdf_to_blob_sync(pdf_path, container_name, connection_string):
+    # Create the BlobServiceClient using the connection string
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    
+    # Get a blob client
     blob_client = blob_service_client.get_blob_client(container=container_name, blob=os.path.basename(pdf_path))
 
+    # Upload the file
     with open(pdf_path, "rb") as pdf_file:
         blob_client.upload_blob(pdf_file, overwrite=True)
 

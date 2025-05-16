@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from pymongo import MongoClient
     
-def inserting_chat_buffer(conversation_id, collection, user_prompt, model_response, reference_points):
+async def inserting_chat_buffer(conversation_id, collection, user_prompt, model_response, reference_points):
     # Insert a chat document into the collection
     chat_history_doc = {
         "id": conversation_id,
@@ -11,10 +11,10 @@ def inserting_chat_buffer(conversation_id, collection, user_prompt, model_respon
         "timestamp": datetime.utcnow().isoformat(),
         "references": reference_points
     }
-    collection.insert_one(chat_history_doc)
+    await collection.insert_one(chat_history_doc)
 
-def conv_history(conversation_id, collection, chat_history_retrieval_limit):
-    chat_history_retrieved = list(collection.find({"id": conversation_id}))
+async def conv_history(conversation_id, collection, chat_history_retrieval_limit):
+    chat_history_retrieved = await collection.find({"id": conversation_id}).to_list(length=None)
     
     recent_chat_history = chat_history_retrieved[-chat_history_retrieval_limit:] if chat_history_retrieved else []
     provided_conversation_history = []
@@ -27,7 +27,7 @@ def conv_history(conversation_id, collection, chat_history_retrieval_limit):
     
     return provided_conversation_history
 
-def inserting_agent_chat_buffer(agents_conversation_id, conversation_id, collection, sub_question, worker_response, context_chunks):
+async def inserting_agent_chat_buffer(agents_conversation_id, conversation_id, collection, sub_question, worker_response, context_chunks):
     chat_history_doc = {
         "id": agents_conversation_id,
         "tid": conversation_id,
@@ -36,10 +36,10 @@ def inserting_agent_chat_buffer(agents_conversation_id, conversation_id, collect
         "timestamp": datetime.utcnow().isoformat(),
         "references": context_chunks
     }
-    collection.insert_one(chat_history_doc)
+    await collection.insert_one(chat_history_doc)
 
-def agents_conv_history(agents_conversation_id, collection, chat_history_retrieval_limit):
-    chat_history_retrieved = list(collection.find({"id": agents_conversation_id}))
+async def agents_conv_history(agents_conversation_id, collection, chat_history_retrieval_limit):
+    chat_history_retrieved = await collection.find({"id": agents_conversation_id}).to_list(length=None)
 
     recent_chat_history = chat_history_retrieved[-chat_history_retrieval_limit:] if chat_history_retrieved else []
     provided_conversation_history = []
@@ -52,8 +52,8 @@ def agents_conv_history(agents_conversation_id, collection, chat_history_retriev
 
     return provided_conversation_history
 
-def agents_total_conv_history(conversation_id, collection, chat_history_retrieval_limit):
-    chat_history_retrieved = list(collection.find({"tid": conversation_id}))
+async def agents_total_conv_history(conversation_id, collection, chat_history_retrieval_limit):
+    chat_history_retrieved = await collection.find({"tid": conversation_id}).to_list(length=None)
 
     recent_chat_history = chat_history_retrieved[-chat_history_retrieval_limit:] if chat_history_retrieved else []
     provided_conversation_history = []

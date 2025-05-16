@@ -1,7 +1,8 @@
 from azure.search.documents.models import QueryType, VectorizableTextQuery, VectorFilterMode
 from azure.search.documents import SearchClient
+import asyncio
 
-def semantic_hybrid_search(
+async def semantic_hybrid_search(
     query: str,
     search_client: SearchClient,
     top: int = 10,
@@ -11,15 +12,15 @@ def semantic_hybrid_search(
     Perform a hybrid search (text + vector) and return the top chunks.
 
     Args:
-        query (str): The user’s search string.
+        query (str): The user's search string.
         search_client (SearchClient): Your initialized Azure SearchClient.
         top (int): How many final results to return.
-        k_nearest (int): How many nearest neighbors to fetch in the vector space.
+        company_names (list[str]): List of company names to filter results.
 
     Returns:
-        List[str]: The returned “chunk” field from each top hit.
+        List[str]: The returned "chunk" field from each top hit.
     """
-    # 1) Build the vector query for semantic similarity (vector search) :contentReference[oaicite:0]{index=0}
+    # 1) Build the vector query for semantic similarity (vector search)
     
     # print("vvvvvvvvvvvvvvvvvvv")
     
@@ -60,18 +61,23 @@ def semantic_hybrid_search(
     else:
         parent_filter = None
 
-    # 2) Execute a hybrid search: full‐text + vector in one call :contentReference[oaicite:1]{index=1}
-    results = search_client.search(
-        search_text=query,            
-        vector_queries=[vec_q],       
-        query_type=QueryType.SIMPLE,  
-        select=["title", "chunk"], 
-        filter=parent_filter,                    
-        vector_filter_mode=VectorFilterMode.PRE_FILTER,
-        top=top
-    )
-
-      # Materialize into a list so we can iterate twice
+    # 2) Execute a hybrid search: full‐text + vector in one call
+    # Use run_in_executor to run the synchronous search method in a thread pool
+    def search_sync():
+        return search_client.search(
+            search_text=query,            
+            vector_queries=[vec_q],       
+            query_type=QueryType.SIMPLE,  
+            select=["title", "chunk"], 
+            filter=parent_filter,                    
+            vector_filter_mode=VectorFilterMode.PRE_FILTER,
+            top=top
+        )
+    
+    # Run the synchronous search operation in a thread pool
+    results = await asyncio.to_thread(search_sync)
+    
+    # Materialize into a list so we can iterate twice
     docs = list(results)
 
     # 3) Materialize and return the chunk strings

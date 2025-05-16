@@ -2,6 +2,7 @@ import json
 from worker import worker
 import os
 import uuid
+import asyncio
 from conv_handleing import agents_conv_history, inserting_agent_chat_buffer, monolog, get_best_worker_response, agents_total_conv_history
 from conv_to_pdf import conversation_to_pdf, upload_pdf_to_blob
 from dotenv import load_dotenv
@@ -10,7 +11,7 @@ from azure.core.credentials import AzureKeyCredential
 
 load_dotenv()
 
-limit_subquestions = 10 # maximum number of sub-questions to be created by manager agent
+limit_subquestions = 3 # maximum number of sub-questions to be created by manager agent
 top_k = 10 # number of chunks to be used by worker agent
 
 director_system_prompt = """
@@ -83,7 +84,7 @@ International Sustainability Reports may contain informations like: Report Title
 """
 
 worker_system_prompt = """
-#Role :You are an ESG consultant with 10-years of experience in India’s BRSR standards and International GRI standards. You have a deep understanding of sustainability consulting, BRSR reporting, XBRL reporting, sustainability reporting, GRI guidelines etc. As an expert in ESG consulting, you know what information is generally available inside the XBRL Datasheets; Indian BRSR and Sustainability Reports; and also in global GRI-standard sustainability reports.
+#Role :You are an ESG consultant with 10-years of experience in India's BRSR standards and International GRI standards. You have a deep understanding of sustainability consulting, BRSR reporting, XBRL reporting, sustainability reporting, GRI guidelines etc. As an expert in ESG consulting, you know what information is generally available inside the XBRL Datasheets; Indian BRSR and Sustainability Reports; and also in global GRI-standard sustainability reports.
 Your task is to understand the question first and then create a well-structured answer using the information chunks provided from the data source to you. Your answer must always contain all the relevant qualitative and quantitative information that you find inside these chunks. If the chunks do not contain the exact information required to answer the question directly then try to provide the closest information that you can from the provided chunks. Always answer with well structured and clear bullet points having both qualitative and quantitative data.
 """
 
@@ -100,7 +101,7 @@ container_name ="agents-cov-pdfs"
 connection_string=os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
 
 
-def manager(
+async def manager(
     client,
     deployment,
     user_prompt,
@@ -143,10 +144,10 @@ def manager(
 
     print("MMMMMMM")
     agents_conversation_id = str(uuid.uuid4())
-    print(f"⚪{azure_search_index} AND agents_convertation_id = {agents_conversation_id}")
-    agents_conversation_history = agents_conv_history(agents_conversation_id, connection, chat_history_retrieval_limit)
+    print(f"Vector search index = {azure_search_index} AND agents_convertation_id = {agents_conversation_id}")
+    agents_conversation_history = await agents_conv_history(agents_conversation_id, connection, chat_history_retrieval_limit)
     
-    completion = client.chat.completions.create(
+    completion = await client.chat.completions.create(
         model=deployment,
         messages=[
             {"role": "system", "content": manager_system_prompt},
@@ -170,7 +171,7 @@ def manager(
     list_of_sub_questions =agent_response["list_of_sub_questions"]
     company_names = agent_response["company_names"]
     print(f"number of sub-questions {len(list_of_sub_questions)}")
-    print(f"company_names: {company_names}")
+    print(f"company_names within the sub-questions: {company_names}")
 
     all_context_chunks = []
 
@@ -179,14 +180,14 @@ def manager(
         i += 1
         # print(f"sub-quetions : {sub_question}")
 
-        worker_response, context_chunks =  worker(client, deployment, sub_question, company_names, agents_conversation_history, search_client, worker_system_prompt, top_k)
-        inserting_agent_chat_buffer(agents_conversation_id, conversation_id, connection, sub_question, worker_response, context_chunks)# chuncks used by worker agent
+        worker_response, context_chunks = await worker(client, deployment, sub_question, company_names, agents_conversation_history, search_client, worker_system_prompt, top_k)
+        await inserting_agent_chat_buffer(agents_conversation_id, conversation_id, connection, sub_question, worker_response, context_chunks)# chuncks used by worker agent
 
-        print(f"{i}th {sub_question}")
+        # print(f"Q{i} : {sub_question}")
         all_context_chunks.extend(context_chunks)
 
 
-    direcotr_response, conv_pdf_url = director(
+    direcotr_response, conv_pdf_url = await director(
         client,
         deployment,
         user_prompt,
@@ -199,7 +200,7 @@ def manager(
     )
     return direcotr_response, all_context_chunks, conv_pdf_url
 
-def director(
+async def director(
     client,
     deployment,
     user_prompt,
@@ -211,8 +212,8 @@ def director(
     conversation_id
 ):
     print("DDDD")
-    agents_conversation_history = agents_conv_history(agents_conversation_id, connection, chat_history_retrieval_limit)
-    completion = client.chat.completions.create(
+    agents_conversation_history = await agents_conv_history(agents_conversation_id, connection, chat_history_retrieval_limit)
+    completion = await client.chat.completions.create(
         model=deployment,
         messages=[
             {"role": "system", "content": director_system_prompt},
@@ -233,10 +234,10 @@ def director(
     # Save the conversation to PDF
     output_dir="conversation_pdfs"
 
-    agents_total_conversation_history = agents_total_conv_history(conversation_id, connection, chat_history_retrieval_limit)
+    agents_total_conversation_history = await agents_total_conv_history(conversation_id, connection, chat_history_retrieval_limit)
     #pdf_path = conversation_to_pdf(agents_conversation_history)
-    pdf_path = conversation_to_pdf(agents_total_conversation_history, direcotr_response, output_dir)
-    conv_pdf_url = upload_pdf_to_blob(pdf_path, container_name, connection_string,)
+    pdf_path = await conversation_to_pdf(agents_total_conversation_history, direcotr_response, output_dir)
+    conv_pdf_url = await upload_pdf_to_blob(pdf_path, container_name, connection_string)
     os.remove(pdf_path)
 
     print(f"Conversation saved to PDF: {pdf_path}")
