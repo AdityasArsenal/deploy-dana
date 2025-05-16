@@ -9,6 +9,16 @@ from reportlab.lib import colors
 from datetime import datetime
 import re
 from azure.storage.blob import BlobServiceClient
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Blob storage
+container_name = os.getenv("BLOB_CONTAINER_FOR_REPORT")
+connection_string=os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
+print("*****************")
+print(connection_string)
+print("*****************")
 
 def markdown_to_reportlab(text):
     # Convert headers
@@ -132,11 +142,11 @@ def _conversation_to_pdf_sync(conversation_history, direcotr_response, output_di
     
     return filepath
 
-async def upload_pdf_to_blob(pdf_path, container_name, connection_string):
+async def upload_pdf_to_blob(pdf_path):
     # Use a thread pool to run the synchronous blob upload
-    return await asyncio.to_thread(_upload_pdf_to_blob_sync, pdf_path, container_name, connection_string)
+    return await asyncio.to_thread(_upload_pdf_to_blob_sync, pdf_path)
 
-def _upload_pdf_to_blob_sync(pdf_path, container_name, connection_string):
+def _upload_pdf_to_blob_sync(pdf_path):
     # Create the BlobServiceClient using the connection string
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     

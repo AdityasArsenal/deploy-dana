@@ -38,10 +38,10 @@ async def inserting_agent_chat_buffer(agents_conversation_id, conversation_id, c
     }
     await collection.insert_one(chat_history_doc)
 
-async def agents_conv_history(agents_conversation_id, collection, chat_history_retrieval_limit):
+async def get_agents_conv_history(agents_conversation_id, collection):
     chat_history_retrieved = await collection.find({"id": agents_conversation_id}).to_list(length=None)
 
-    recent_chat_history = chat_history_retrieved[-chat_history_retrieval_limit:] if chat_history_retrieved else []
+    recent_chat_history = chat_history_retrieved if chat_history_retrieved else []
     provided_conversation_history = []
     
     for doc in recent_chat_history:
@@ -52,10 +52,10 @@ async def agents_conv_history(agents_conversation_id, collection, chat_history_r
 
     return provided_conversation_history
 
-async def agents_total_conv_history(conversation_id, collection, chat_history_retrieval_limit):
+async def get_agents_total_conv_history(conversation_id, collection):
     chat_history_retrieved = await collection.find({"tid": conversation_id}).to_list(length=None)
 
-    recent_chat_history = chat_history_retrieved[-chat_history_retrieval_limit:] if chat_history_retrieved else []
+    recent_chat_history = chat_history_retrieved if chat_history_retrieved else []
     provided_conversation_history = []
     
     for doc in recent_chat_history:

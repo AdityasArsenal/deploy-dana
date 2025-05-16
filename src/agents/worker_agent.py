@@ -1,14 +1,15 @@
-from v_search import semantic_hybrid_search
+from tools.v_search import semantic_hybrid_search
 
 async def worker(
-    client,
+    llm_client,
     deployment,
     sub_question,
     company_names,
     agents_conversation_history,
     search_client,
     system_prompt,
-    top_k
+    top_k,
+    conversation_id
 ):
     # return "worker responded", ["","",""]
 
@@ -16,7 +17,7 @@ async def worker(
 
     user_message_with_context = f"#My question: {sub_question}\n\n#Relevant information: {context_chunks}"
 
-    completion = await client.chat.completions.create(
+    completion = await llm_client.chat.completions.create(
         model=deployment,
         messages=[
             {"role": "system", "content": system_prompt},
@@ -33,16 +34,3 @@ async def worker(
     response_message = completion.choices[0].message.content
     
     return response_message, context_chunks
-
-    print("===============context chunks:=================")
-    print(context_chunks)
-    print("===============context chunks:=================")
-    print(f"\Message: {completion.choices[0].message}")
-
-    print("===============sub :=================")
-    print(f"Sub: {sub_question} AND company names: {company_names}\n")
-    print(f"user role: Previous conversation: {agents_conversation_history},\nMy question: {sub_question}")
-    print("===============sub :=================")
-
-    response_message = completion.choices[0].message.content
-    #print("worker exicuted")

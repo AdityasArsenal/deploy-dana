@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # Backend URL
-WEBHOOK_URL = "https://esgai-backend-ewdvhyhde7gzcdcn.southindia-01.azurewebsites.net/chat"
+WEBHOOK_URL = "http://localhost:8000/chat"
 
 # Initialize session state if not already present
 if "messages" not in st.session_state:
