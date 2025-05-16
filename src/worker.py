@@ -14,7 +14,7 @@ async def worker(
 
     context_chunks, titles = await semantic_hybrid_search(sub_question, search_client, top_k, company_names)
 
-    user_message_with_context = f"My question: {sub_question}\n\nRelevant information:: {context_chunks}"
+    user_message_with_context = f"#My question: {sub_question}\n\n#Relevant information: {context_chunks}"
 
     completion = await client.chat.completions.create(
         model=deployment,

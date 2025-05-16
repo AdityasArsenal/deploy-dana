@@ -95,40 +95,43 @@ async def semantic_hybrid_search(
 
     return chunks, titles
 
-    # j = 0
-    # for i in chunks:
-    #     j += 1
-    #     print("===============chunk:=================")
-    #     print(f"{j}. {i}\n")
-    #     print("===============chunk:=================")
 
+# Test code - Comment out or wrap in if __name__ == "__main__" to prevent auto-execution
+# This code is for testing the semantic_hybrid_search function directly
+# if __name__ == "__main__":
+#     import os
+#     from dotenv import load_dotenv
+#     from azure.core.credentials import AzureKeyCredential
 
-#Test code for single company
-# import os
-# from dotenv import load_dotenv
-# from azure.core.credentials import AzureKeyCredential
+#     load_dotenv()
 
-# load_dotenv()
+#     azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
+#     azure_search_index = os.getenv("AI_SEARCH_INDEX")
+#     # azure_search_index = "test-vector-index"
+#     azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
 
-# azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
-# azure_search_index = os.getenv("AI_SEARCH_INDEX")
-# # azure_search_index = "test-vector-index"
-# azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
+#     #Azure AI search client
+#     search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
-# #Azure AI search client
-# search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
+#     company_names=["Iti limited"]
 
-# company_names=["ITILIMITED"]
+#     query = f"what is {company_names[0]} CARBON EMISSIONS"
+#     top_k = 10
+#     print(f"Index: {azure_search_index}")
 
-# query = f"what is {company_names[0]} CARBON EMISSIONS"
-# top_k = 10
-
-# chunks, titles = semantic_hybrid_search(query, search_client, top_k, company_names)
-
-# for i in range(len(chunks)):
-#     print(f"\n{i}. {titles[i]} //chunk title\n")
-#     print("===============chunk:=================")
-#     print(f"## chunk: {chunks[i]}")
+#     # Create an async function to run our search
+#     async def run_test_search():
+#         chunks, titles = await semantic_hybrid_search(query, search_client, top_k, company_names)
+        
+#         print(f"number of chunks: {len(chunks)}")
+#         print(f"The titles: {titles}")
+        # for i in range(len(chunks)):
+        #     print(f"\n{i}. {titles[i]} //chunk title\n")
+        #     print("===============chunk:=================")
+            # print(f"## chunk: {chunks[i]}")
+    
+    # Run the async function
+    # asyncio.run(run_test_search())
 
 
 ##To check if  a list of companies are missing from the vector dataset

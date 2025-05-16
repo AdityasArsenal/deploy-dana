@@ -61,7 +61,6 @@ client = AsyncAzureOpenAI(
 )
 
 async def agentic_flow(user_prompt,conversation_id):
-    max_iterations = 3
     
     provided_conversation_history = await conv_history(conversation_id, connection, chat_history_retrieval_limit)
 
@@ -92,6 +91,3 @@ async def chat(request: ChatRequest):
 @app.get("/")
 async def home():
     return {"message": "Hello, World!"}
-
-# pp = agents_conv_history("f4285eea-5126-473d-a9b7-e3d528a5d42d", connection, 10)
-# conversation_to_pdf(pp,"hh")

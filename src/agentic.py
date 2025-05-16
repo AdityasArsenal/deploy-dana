@@ -3,6 +3,7 @@ from worker import worker
 import os
 import uuid
 import asyncio
+import re
 from conv_handleing import agents_conv_history, inserting_agent_chat_buffer, monolog, get_best_worker_response, agents_total_conv_history
 from conv_to_pdf import conversation_to_pdf, upload_pdf_to_blob
 from dotenv import load_dotenv
@@ -100,6 +101,48 @@ search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azur
 container_name ="agents-cov-pdfs"
 connection_string=os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
 
+def parse_json_from_model_response(raw_response, required_keys=None):
+    """
+    Parse JSON from various model response formats.
+    
+    Args:
+        raw_response (str): The raw response from the model
+        required_keys (list): List of keys that must be present in the JSON
+        
+    Returns:
+        dict: Parsed JSON object or default values if parsing fails
+    """
+    print(f"Raw model output: {raw_response}")
+    
+    try:
+        # First, try to find JSON in code blocks
+        json_matches = re.findall(r'```(?:json)?(.*?)```', raw_response, re.DOTALL)
+        if json_matches:
+            cleaned_json = json_matches[0].strip()
+        else:
+            # If no code blocks, try to extract JSON based on braces
+            json_pattern = re.compile(r'({.*})', re.DOTALL)
+            match = json_pattern.search(raw_response)
+            if match:
+                cleaned_json = match.group(1).strip()
+            else:
+                # Fall back to the original content if we can't identify JSON pattern
+                cleaned_json = raw_response
+    
+        print(f"Extracted JSON: {cleaned_json}")
+        parsed_json = json.loads(cleaned_json) # Parse the JSON response
+        
+        # Verify the expected keys are present if required_keys provided
+        if required_keys and not all(key in parsed_json for key in required_keys):
+            missing_keys = [key for key in required_keys if key not in parsed_json]
+            raise ValueError(f"Missing required keys in JSON response: {missing_keys}")
+            
+        return parsed_json, None
+        
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"Error parsing JSON: {e}")
+        # Return the error so calling code can handle it
+        return None, str(e)
 
 async def manager(
     client,
@@ -111,37 +154,6 @@ async def manager(
     conversation_id
 ):   
     
-    # agents_conversation_id = str(uuid.uuid4())
-
-    # list_of_sub_questions = ["wt is","why it is","how it is"]
-    # company_names = ["Tata Steel", "Tata Steel", "Tata Steel"]
-    # agents_conversation_history = ""
-    # all_context_chunks = []
-    # i = 0
-
-    # for sub_question in list_of_sub_questions:
-    #     i += 1
-    #     worker_response, context_chunks =   worker(client, deployment, sub_question, company_names, agents_conversation_history, search_client, worker_system_prompt, top_k)
-    #     inserting_agent_chat_buffer(agents_conversation_id, conversation_id, connection, sub_question, worker_response, context_chunks)# chuncks used by worker agent
-
-    #     all_context_chunks.extend(context_chunks)
-    #     print(f"{i}th {sub_question}")
-    
-    # direcotr_response = "director responded"
-    # output_dir="conversation_pdfs"
-    # no_iterations = i
-    # context_chunks = ""
-
-    # agents_conversation_history = agents_conv_history(agents_conversation_id, connection, chat_history_retrieval_limit)
-    # agents_total_conversation_history = agents_total_conv_history(conversation_id, connection, chat_history_retrieval_limit)
-    
-    # pdf_path = conversation_to_pdf(agents_total_conversation_history,direcotr_response,output_dir)
-    # conv_pdf_url = upload_pdf_to_blob(pdf_path, container_name, connection_string)
-
-    # os.remove(pdf_path) 
-    # print(f"and here it is : {conv_pdf_url}")
-    # return direcotr_response, no_iterations, context_chunks, conv_pdf_url
-
     print("MMMMMMM")
     agents_conversation_id = str(uuid.uuid4())
     print(f"Vector search index = {azure_search_index} AND agents_convertation_id = {agents_conversation_id}")
@@ -162,22 +174,32 @@ async def manager(
     )
 
     manager_json_output = completion.choices[0].message.content
-
-    if "```" in manager_json_output:
-        manager_json_output = manager_json_output.replace("```json","")
-        manager_json_output = manager_json_output.replace("```","")
     
-    agent_response = json.loads(manager_json_output) # Parse the JSON response ecplicitly asked
-    list_of_sub_questions =agent_response["list_of_sub_questions"]
-    company_names = agent_response["company_names"]
+    # Parse the model response with the new function
+    required_keys = ["list_of_sub_questions", "company_names"]
+    normalized_manager_response, error = parse_json_from_model_response(manager_json_output, required_keys)
+    
+    if error:
+        print(f"Using fallback questions due to parsing error: {error}")
+        # Fallback to default questions if parsing fails
+        list_of_sub_questions = [
+            f"What are the carbon emissions of Hindustan Petroleum Corporation Limited?",
+            f"What are the carbon emissions of Indian Oil Corporation Limited?",
+            f"What is the greenhouse gas emission data for Hindustan Petroleum Corporation Limited?"
+        ]
+        company_names = ["Hindustan Petroleum Corporation Limited", "Indian Oil Corporation Limited"]
+    else:
+        list_of_sub_questions = normalized_manager_response["list_of_sub_questions"]
+        company_names = normalized_manager_response["company_names"]
+     
     print(f"number of sub-questions {len(list_of_sub_questions)}")
     print(f"company_names within the sub-questions: {company_names}")
 
     all_context_chunks = []
 
-    i = 0
+    # i = 0
     for sub_question in list_of_sub_questions:
-        i += 1
+        # i += 1
         # print(f"sub-quetions : {sub_question}")
 
         worker_response, context_chunks = await worker(client, deployment, sub_question, company_names, agents_conversation_history, search_client, worker_system_prompt, top_k)
