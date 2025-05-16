@@ -12,7 +12,7 @@ from azure.core.credentials import AzureKeyCredential
 
 load_dotenv()
 
-limit_subquestions = 3 # maximum number of sub-questions to be created by manager agent
+limit_subquestions = 10 # maximum number of sub-questions to be created by manager agent
 top_k = 10 # number of chunks to be used by worker agent
 
 director_system_prompt = """
@@ -144,6 +144,42 @@ def parse_json_from_model_response(raw_response, required_keys=None):
         # Return the error so calling code can handle it
         return None, str(e)
 
+async def process_sub_question(
+    client, 
+    deployment, 
+    sub_question, 
+    company_names, 
+    agents_conversation_history, 
+    search_client, 
+    worker_system_prompt, 
+    top_k,
+    agents_conversation_id,
+    conversation_id,
+    connection
+):
+    """Process a single sub-question and store results in the database"""
+    worker_response, context_chunks = await worker(
+        client, 
+        deployment, 
+        sub_question, 
+        company_names, 
+        agents_conversation_history, 
+        search_client, 
+        worker_system_prompt, 
+        top_k
+    )
+    
+    await inserting_agent_chat_buffer(
+        agents_conversation_id, 
+        conversation_id, 
+        connection, 
+        sub_question, 
+        worker_response, 
+        context_chunks
+    )
+    
+    return worker_response, context_chunks
+
 async def manager(
     client,
     deployment,
@@ -195,19 +231,34 @@ async def manager(
     print(f"number of sub-questions {len(list_of_sub_questions)}")
     print(f"company_names within the sub-questions: {company_names}")
 
+    # Create a list of tasks for each sub-question
+    tasks = [
+        process_sub_question(
+            client, 
+            deployment, 
+            sub_question, 
+            company_names, 
+            agents_conversation_history, 
+            search_client, 
+            worker_system_prompt, 
+            top_k,
+            agents_conversation_id,
+            conversation_id,
+            connection
+        ) 
+        for sub_question in list_of_sub_questions
+    ]
+    
+    # Run all tasks concurrently
+    print(f"Processing {len(tasks)} sub-questions in parallel...")
+    results = await asyncio.gather(*tasks)
+    
+    # Collect all context chunks from the results
     all_context_chunks = []
-
-    # i = 0
-    for sub_question in list_of_sub_questions:
-        # i += 1
-        # print(f"sub-quetions : {sub_question}")
-
-        worker_response, context_chunks = await worker(client, deployment, sub_question, company_names, agents_conversation_history, search_client, worker_system_prompt, top_k)
-        await inserting_agent_chat_buffer(agents_conversation_id, conversation_id, connection, sub_question, worker_response, context_chunks)# chuncks used by worker agent
-
-        # print(f"Q{i} : {sub_question}")
+    for _, context_chunks in results:
         all_context_chunks.extend(context_chunks)
-
+    
+    print(f"Collected {len(all_context_chunks)} context chunks from all workers")
 
     direcotr_response, conv_pdf_url = await director(
         client,
