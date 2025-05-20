@@ -2,6 +2,7 @@ from azure.search.documents.models import QueryType, VectorizableTextQuery, Vect
 from azure.search.documents import SearchClient
 import asyncio
 
+#search.in this is a strict filter only gives reselts with the exact match
 async def semantic_hybrid_search(
     query: str,
     search_client: SearchClient,
@@ -36,7 +37,12 @@ async def semantic_hybrid_search(
     if company_names and len(company_names) > 0:
         for company_name in company_names:
             company_name = company_name.replace(" ", "")
-            
+            # if "LIMITED" or "limited" or "Limited" in company_name:
+            #     company_name = company_name
+            # else:
+            #     company_name = company_name + " Limited"
+
+            print(company_name)
             # print(company_name)
 
             titlename1 = f"{company_name}.xml"
@@ -67,7 +73,7 @@ async def semantic_hybrid_search(
         return search_client.search(
             search_text=query,            
             vector_queries=[vec_q],       
-            query_type=QueryType.SIMPLE,  
+            query_type=QueryType.SIMPLE,
             select=["title", "chunk"], 
             filter=parent_filter,                    
             vector_filter_mode=VectorFilterMode.PRE_FILTER,
@@ -98,40 +104,38 @@ async def semantic_hybrid_search(
 
 # Test code - Comment out or wrap in if __name__ == "__main__" to prevent auto-execution
 # This code is for testing the semantic_hybrid_search function directly
-# if __name__ == "__main__":
-#     import os
-#     from dotenv import load_dotenv
-#     from azure.core.credentials import AzureKeyCredential
+if __name__ == "__main__":
+    import os
+    from dotenv import load_dotenv
+    from azure.core.credentials import AzureKeyCredential
 
-#     load_dotenv()
+    load_dotenv()
 
-#     azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
-#     azure_search_index = os.getenv("AI_SEARCH_INDEX")
-#     # azure_search_index = "test-vector-index"
-#     azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
+    azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
+    azure_search_index = os.getenv("AI_SEARCH_INDEX")
+    # azure_search_index = "test-vector-index"
+    azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
 
-#     #Azure AI search client
-#     search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
+    #Azure AI search client
+    search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
-#     company_names=["Iti limited"]
+    company_names=["Reliance Industries Limited", "ITI Limited"]
 
-#     query = f"what is {company_names[0]} CARBON EMISSIONS"
-#     top_k = 10
-#     print(f"Index: {azure_search_index}")
+    query = f"what is {company_names[0]} and {company_names[1]} CARBON EMISSIONS"
+    top_k = 15
+    print(f"Index: {azure_search_index}")
 
-#     # Create an async function to run our search
-#     async def run_test_search():
-#         chunks, titles = await semantic_hybrid_search(query, search_client, top_k, company_names)
+    # Create an async function to run our search
+    async def run_test_search():
+        chunks, titles = await semantic_hybrid_search(query, search_client, top_k, company_names)
         
-#         print(f"number of chunks: {len(chunks)}")
-#         print(f"The titles: {titles}")
-        # for i in range(len(chunks)):
-        #     print(f"\n{i}. {titles[i]} //chunk title\n")
-        #     print("===============chunk:=================")
+        print(f"number of chunks: {len(chunks)}")
+        for i in range(len(chunks)):
+            print(f"\n{i}. {titles[i]} //chunk title")
             # print(f"## chunk: {chunks[i]}")
     
     # Run the async function
-    # asyncio.run(run_test_search())
+    asyncio.run(run_test_search())
 
 
 ##To check if  a list of companies are missing from the vector dataset

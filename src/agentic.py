@@ -30,7 +30,7 @@ print(f"director_system_prompt: {director_system_prompt}")
 print(f"manager_system_prompt: {manager_system_prompt}")
 print(f"worker_system_prompt: {worker_system_prompt}")
     
-    
+
 
 # Azure AI Search configuration
 azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")

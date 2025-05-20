@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import uuid
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
-from openai import AsyncAzureOpenAI
+from openai import AsyncAzureOpenAI  
 import os
 import uvicorn
 from tools.conv_handler import conv_history, inserting_chat_buffer
