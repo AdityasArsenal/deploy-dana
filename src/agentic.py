@@ -127,7 +127,6 @@ async def manager(
         user_prompt,
         user_conversation_history,
         connection,
-        chat_history_retrieval_limit,
         all_context_chunks,
         agents_conversation_id,
         conversation_id
