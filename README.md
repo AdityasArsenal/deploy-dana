@@ -310,7 +310,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 - **Issues**: [GitHub Issues](https://github.com/your-username/esgai/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-username/esgai/discussions)
-- **Email**: support@esgai.com
+- **Email**: 24aditypatil@gamail.com
 
 ## 🙏 Acknowledgments
 
