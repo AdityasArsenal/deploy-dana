@@ -1,5 +1,35 @@
+"""
+Conversation to PDF Handler Module
+
+This module handles the generation and storage of PDF reports from conversation data.
+It creates comprehensive, formatted reports of agent interactions and uploads them
+to Azure Blob Storage for user access and documentation purposes.
+
+Key Responsibilities:
+- Convert conversation history to formatted PDF documents
+- Handle markdown formatting for readable reports
+- Upload PDF reports to Azure Blob Storage
+- Provide downloadable URLs for generated reports
+
+Dependencies:
+- ReportLab: PDF generation library
+- Azure Blob Storage: Cloud storage for PDF files
+- Markdown processing: Text formatting for reports
+
+Related Files:
+- agents/director_agent.py: Primary consumer for PDF generation and upload
+- tools/conv_handler.py: Provides conversation data for PDF content
+- app.py: Returns PDF URLs to users (via director agent)
+
+External Dependencies:
+- Azure Blob Storage account with configured container
+- ReportLab library for PDF generation
+- Proper Azure storage credentials and container permissions
+"""
+
 import os
 import asyncio
+from typing import List, Dict, Tuple, Any
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -13,14 +43,39 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Blob storage
+# Blob storage configuration
+# Used for uploading generated PDF reports
 container_name = os.getenv("BLOB_CONTAINER_FOR_REPORT")
 connection_string=os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
 print("*****************")
 print(connection_string)
 print("*****************")
 
-def markdown_to_reportlab(text):
+def markdown_to_reportlab(text: str) -> str:
+    """
+    Convert markdown formatting to ReportLab HTML-like markup.
+    
+    This function transforms common markdown elements into ReportLab-compatible
+    markup for proper formatting in PDF documents, ensuring readable reports.
+    
+    Args:
+        text (str): Raw text content with markdown formatting
+        
+    Returns:
+        str: Text converted to ReportLab-compatible markup
+        
+    Supported Markdown Elements:
+        - Headers (# ## ###)
+        - Bold text (**)
+        - Italic text (*)
+        - Bullet points (-)
+        - Numbered lists
+        - Document references [doc1]
+        
+    Related Files:
+        - Used by _conversation_to_pdf_sync() for formatting agent responses
+        - Processes text from tools/conv_handler.py conversation data
+    """
     # Convert headers
     text = re.sub(r'### (.*?)\n', r'<font face="Helvetica-Bold" size="12">\1</font><br/>', text)
     text = re.sub(r'## (.*?)\n', r'<font face="Helvetica-Bold" size="14">\1</font><br/>', text)
@@ -46,12 +101,79 @@ def markdown_to_reportlab(text):
     
     return text
 
-async def conversation_to_pdf(conversation_history, direcotr_response,output_dir="./conversation_pdfs"):
+async def conversation_to_pdf(
+    conversation_history: List[Dict[str, str]], 
+    direcotr_response: str,
+    output_dir: str = "./conversation_pdfs"
+) -> str:
+    """
+    Generate a comprehensive PDF report from conversation history.
+    
+    This function creates a formatted PDF document containing all agent interactions,
+    sub-questions, responses, and the final director synthesis. Essential for
+    providing users with detailed documentation of the agentic workflow.
+    
+    Args:
+        conversation_history (List[Dict[str, str]]): Agent conversation data
+            Format: [{"role": "manager_agent|worker_agent", "content": "..."}]
+        direcotr_response (str): Final synthesized response from director agent
+        output_dir (str): Directory path for saving PDF files (default: "./conversation_pdfs")
+        
+    Returns:
+        str: File path to the generated PDF document
+        
+    Workflow:
+        1. Create output directory if needed
+        2. Generate timestamped filename
+        3. Format conversation as Q&A pairs
+        4. Apply markdown formatting via markdown_to_reportlab()
+        5. Build structured PDF with ReportLab
+        6. Return file path for upload process
+        
+    Related Files:
+        - agents/director_agent.py: Primary caller for PDF generation
+        - tools/conv_handler.py: Provides conversation_history data
+        - upload_pdf_to_blob(): Handles subsequent upload to Azure Blob Storage
+        
+    PDF Structure:
+        - Title and generation timestamp
+        - Description of the agentic process
+        - Numbered Q&A pairs from agent interactions
+        - Final summary (director response)
+    """
     # This function uses the reportlab library which is not async-compatible
     # Run the CPU-intensive PDF generation in a thread pool to not block the event loop
     return await asyncio.to_thread(_conversation_to_pdf_sync, conversation_history, direcotr_response, output_dir)
 
-def _conversation_to_pdf_sync(conversation_history, direcotr_response, output_dir):
+def _conversation_to_pdf_sync(
+    conversation_history: List[Dict[str, str]], 
+    direcotr_response: str, 
+    output_dir: str
+) -> str:
+    """
+    Synchronous PDF generation implementation.
+    
+    This function contains the actual PDF generation logic using ReportLab,
+    wrapped in asyncio.to_thread() to avoid blocking the async event loop.
+    
+    Args:
+        conversation_history (List[Dict[str, str]]): Agent conversation data
+        direcotr_response (str): Final director agent response
+        output_dir (str): Directory for PDF output
+        
+    Returns:
+        str: Generated PDF file path
+        
+    Implementation Details:
+        - Uses ReportLab for PDF generation (synchronous library)
+        - Creates custom styles for different content types
+        - Processes markdown formatting for readable output
+        - Generates timestamped filenames for uniqueness
+        
+    Related Files:
+        - Called by conversation_to_pdf() for async compatibility
+        - Uses markdown_to_reportlab() for text formatting
+    """
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -142,11 +264,61 @@ def _conversation_to_pdf_sync(conversation_history, direcotr_response, output_di
     
     return filepath
 
-async def upload_pdf_to_blob(pdf_path):
+async def upload_pdf_to_blob(pdf_path: str) -> str:
+    """
+    Upload generated PDF to Azure Blob Storage and return public URL.
+    
+    This function handles the upload of PDF reports to Azure Blob Storage,
+    providing users with downloadable links to their conversation summaries.
+    
+    Args:
+        pdf_path (str): Local file path to the generated PDF document
+        
+    Returns:
+        str: Public URL for accessing the uploaded PDF
+        
+    Workflow:
+        1. Create Azure Blob Storage client using connection string
+        2. Upload PDF file with overwrite enabled
+        3. Return public blob URL for user access
+        4. Enable users to download comprehensive workflow reports
+        
+    Related Files:
+        - agents/director_agent.py: Primary caller after PDF generation
+        - conversation_to_pdf(): Provides pdf_path for upload
+        - app.py: Returns blob URL to users (via director agent)
+        
+    Configuration:
+        - Uses STORAGE_ACCOUNT_CONNECTION_STRING environment variable
+        - Uses BLOB_CONTAINER_FOR_REPORT environment variable
+        - Requires proper Azure storage account setup and permissions
+    """
     # Use a thread pool to run the synchronous blob upload
     return await asyncio.to_thread(_upload_pdf_to_blob_sync, pdf_path)
 
-def _upload_pdf_to_blob_sync(pdf_path):
+def _upload_pdf_to_blob_sync(pdf_path: str) -> str:
+    """
+    Synchronous Azure Blob Storage upload implementation.
+    
+    This function contains the actual blob upload logic, wrapped in
+    asyncio.to_thread() to avoid blocking the async event loop.
+    
+    Args:
+        pdf_path (str): Local file path to the PDF to upload
+        
+    Returns:
+        str: Public URL of the uploaded blob
+        
+    Implementation Details:
+        - Uses Azure Blob Storage SDK (synchronous operations)
+        - Overwrites existing blobs with same name
+        - Returns direct blob URL for user access
+        - Handles file reading and upload in chunks
+        
+    Related Files:
+        - Called by upload_pdf_to_blob() for async compatibility
+        - Used by agents/director_agent.py for file cleanup coordination
+    """
     # Create the BlobServiceClient using the connection string
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     
