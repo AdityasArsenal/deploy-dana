@@ -47,9 +47,9 @@ load_dotenv()
 # Used for uploading generated PDF reports
 container_name = os.getenv("BLOB_CONTAINER_FOR_REPORT")
 connection_string=os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
-print("*****************")
-print(connection_string)
-print("*****************")
+# print("*****************")
+# print(connection_string)
+# print("*****************")
 
 def markdown_to_reportlab(text: str) -> str:
     """
