@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # Backend URL
-WEBHOOK_URL = "http://localhost:8000/chat"
+WEBHOOK_URL = "https://esgai-backend-ewdvhyhde7gzcdcn.southindia-01.azurewebsites.net/chat"
 
 # Initialize session state if not already present
 if "messages" not in st.session_state:
@@ -38,13 +38,16 @@ if user_input:
     
     with st.spinner("Looking for relevant stuff..."):
         response = requests.post(WEBHOOK_URL, json=payload)
+        # print(response.json())
     
     if response.status_code == 200:
         json_response = response.json()
         ai_message = json_response.get("response", "Sorry, no response was generated.")
         st.session_state.conversation_id = json_response.get("conversation_id", st.session_state.conversation_id)
-        st.session_state.messages.append({"role": "assistant", "content": ai_message})
         
+        st.session_state.messages.append({"role": "assistant", "content": ai_message})
+        print(st.session_state.messages)
+
         # Check if agents_conv_pdf_url is available
         agents_conv_pdf_url = json_response.get("agents_conv_pdf_url")
         if agents_conv_pdf_url:

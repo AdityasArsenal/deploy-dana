@@ -67,7 +67,7 @@ def load_prompt_from_file(file_path: str) -> str:
 # Load system prompts for each agent type
 # These prompts define the behavior and capabilities of each agent
 director_system_prompt = load_prompt_from_file('./prompts/director_system_prompt.txt')
-manager_system_prompt = load_prompt_from_file('./prompts/manager_system_prompt.txt').replace('{limit_subquestions}', str(limit_subquestions))
+manager_system_prompt = load_prompt_from_file('./prompts/1manager_system_prompt.txt').replace('{limit_subquestions}', str(limit_subquestions))
 worker_system_prompt = load_prompt_from_file('./prompts/worker_system_prompt.txt')
 
 # print(f"director_system_prompt: {director_system_prompt}")
@@ -171,9 +171,18 @@ async def manager(
     else:
         list_of_sub_questions = normalized_manager_response["list_of_sub_questions"]
         company_names = normalized_manager_response["company_names"]
-     
-    print(f"number of sub-questions {len(list_of_sub_questions)}")
-    print(f"company_names within the sub-questions: {company_names}")
+
+    # print(f"============================================================") 
+    # print(f"number of sub-questions {len(list_of_sub_questions)}")
+    # for i in range(len(list_of_sub_questions)):
+    #     print(f"sub-questions: {list_of_sub_questions[i]}")
+    # print(f"company_names within the sub-questions: {company_names}")
+    # print(f"============================================================") 
+
+    # direcotr_response = "director responded"
+    # all_context_chunks = ["context chunks"]
+    # conv_pdf_url = "conv_pdf_url"
+    # return direcotr_response, all_context_chunks, conv_pdf_url
 
     # Create concurrent tasks for parallel processing of sub-questions
     # Each task is handled by agents/sub_question_handler.py which coordinates with worker agents

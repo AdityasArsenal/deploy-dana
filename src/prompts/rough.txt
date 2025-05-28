@@ -1,0 +1,29 @@
+number of sub-questions 10
+sub-questions: What are the key social factors highlighted in the BRSR report for Hindustan Petroleum Corporation Limited (HPCL)?
+sub-questions: What are the key social factors highlighted in the BRSR report for Indian Oil Corporation Limited (IOCL)?
+sub-questions: What are the key social KPIs reported in the XBRL datasheet for Hindustan Petroleum Corporation Limited (HPCL)?
+sub-questions: What are the key social KPIs reported in the XBRL datasheet for Indian Oil Corporation Limited (IOCL)?
+sub-questions: What employee-related statistics, such as diversity, turnover rates, training programs, and grievance redressal mechanisms, are reported by Hindustan Petroleum Corporation Limited (HPCL) in its sustainability report?
+sub-questions: What employee-related statistics, such as diversity, turnover rates, training programs, and grievance redressal mechanisms, are reported by Indian Oil Corporation Limited (IOCL) in its sustainability report?
+sub-questions: What community impact and social responsibility initiatives are reported by Hindustan Petroleum Corporation Limited (HPCL) in its sustainability report?
+sub-questions: What community impact and social responsibility initiatives are reported by Indian Oil Corporation Limited (IOCL) in its sustainability report?
+sub-questions: What is the approach of Hindustan Petroleum Corporation Limited (HPCL) towards human rights, safety, and occupational health as documented in the BRSR report or sustainability report?
+sub-questions: What is the approach of Indian Oil Corporation Limited (IOCL) towards human rights, safety, and occupational health as documented in the BRSR report or sustainability report?
+company_names within the sub-questions: ['Hindustan Petroleum Corporation Limited', 'Indian Oil Corporation Limited']
+
+
+
+number of sub-questions 10
+sub-questions: What are the key social factors highlighted in HPCL's sustainability report, BRSR, or XBRL datasheets?
+sub-questions: What are the key social factors highlighted in IOCL's sustainability report, BRSR, or XBRL datasheets?
+sub-questions: What is the overview of training and development programs at HPCL?
+sub-questions: What is the overview of training and development programs at IOCL?
+sub-questions: What employee diversity and inclusion initiatives are mentioned in HPCL's reports?
+sub-questions: What employee diversity and inclusion initiatives are mentioned in IOCL's reports?
+sub-questions: What information is available about community engagement or CSR projects undertaken by HPCL?
+sub-questions: What information is available about community engagement or CSR projects undertaken by IOCL?
+sub-questions: What safety and health initiatives are described in HPCL's reports?
+sub-questions: What safety and health initiatives are described in IOCL's reports?
+company_names within the sub-questions: ['HPCL', 'IOCL', 'HPCL', 'IOCL', 'HPCL', 'IOCL', 'HPCL', 'IOCL', 'HPCL', 'IOCL']
+
+============================================================
