@@ -55,6 +55,7 @@ origins = [
     "https://www.esgai.space",
     "https://deploy-dana-frontend-woj6-git-main-adityasarsenals-projects.vercel.app/",
     "https://esgai-frontend-fngrdkfke5h0aphb.eastus2-01.azurewebsites.net",
+    "https://esgai-frontend-fngrdkfke5h0aphb.eastus2-01.azurewebsites.net/",
     "https://esgai-frontend-fngrdkfke5h0aphb.eastus2-01.azurewebsites.net/"
     # Add the deployed frontend URL here if applicable
     # "https://your-frontend-domain.com",
