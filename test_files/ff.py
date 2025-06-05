@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # Backend URL
-WEBHOOK_URL = "https://esgai-backend-ewdvhyhde7gzcdcn.southindia-01.azurewebsites.net/chat"
+WEBHOOK_URL = "http://localhost:5000/chat"
 
 # Initialize session state if not already present
 if "messages" not in st.session_state:
@@ -46,7 +46,6 @@ if user_input:
         st.session_state.conversation_id = json_response.get("conversation_id", st.session_state.conversation_id)
         
         st.session_state.messages.append({"role": "assistant", "content": ai_message})
-        print(st.session_state.messages)
 
         # Check if agents_conv_pdf_url is available
         agents_conv_pdf_url = json_response.get("agents_conv_pdf_url")

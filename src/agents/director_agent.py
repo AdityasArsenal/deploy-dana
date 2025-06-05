@@ -28,7 +28,7 @@ import os
 from typing import List, Dict, Any, Tuple
 from openai import AsyncAzureOpenAI
 from motor.motor_asyncio import AsyncIOMotorCollection
-from tools.conv_to_pdf_handler import conversation_to_pdf, upload_pdf_to_blob
+from tools.conv_to_pdf_handler import conversation_to_pdf, upload_pdf_to_blob, conversation_with_context_to_pdf
 from tools.conv_handler import get_agents_conv_history, get_agents_total_conv_history
 
 async def director(
@@ -115,6 +115,9 @@ async def director(
     # Creates a formatted document with conversation history and final response
     pdf_path = await conversation_to_pdf(agents_total_conversation_history, direcotr_response, output_dir)
     
+    #pdf with all the context chunks
+    # pdf_path_with_context = await conversation_with_context_to_pdf(user_prompt, agents_total_conversation_history, all_context_chunks, direcotr_response, output_dir)
+
     # Upload PDF to Azure Blob storage and get public URL
     # Allows users to download the conversation summary
     conv_pdf_url = await upload_pdf_to_blob(pdf_path)

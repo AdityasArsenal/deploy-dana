@@ -331,6 +331,117 @@ def _upload_pdf_to_blob_sync(pdf_path: str) -> str:
 
     return blob_client.url  # Return the URL of the uploaded PDF
 
+async def conversation_with_context_to_pdf(
+    user_prompt: str,
+    agents_total_conversation_history: List[Dict[str, str]],
+    all_context_chunks: List[str],
+    direcotr_response: str,
+    output_dir: str = "./conversation_pdfs"
+) -> str:
+    """
+    Generate a PDF containing user prompt, agents conversation history, all context chunks, and director response in order.
+    
+    Args:
+        user_prompt (str): The original user question
+        agents_total_conversation_history (List[Dict[str, str]]): Complete conversation history
+        all_context_chunks (List[str]): All context chunks gathered by worker agents
+        direcotr_response (str): Final synthesized response from director agent
+        output_dir (str): Directory path for saving PDF files (default: "./conversation_pdfs")
+    
+    Returns:
+        str: File path to the generated PDF document
+    """
+    return await asyncio.to_thread(_conversation_with_context_to_pdf_sync, user_prompt, agents_total_conversation_history, all_context_chunks, direcotr_response, output_dir)
+
+def _conversation_with_context_to_pdf_sync(
+    user_prompt: str,
+    agents_total_conversation_history: List[Dict[str, str]],
+    all_context_chunks: List[str],
+    direcotr_response: str,
+    output_dir: str
+) -> str:
+    """
+    Synchronous PDF generation with context implementation.
+    
+    This function generates a PDF report that includes the user prompt, the entire
+    conversation history with agent responses, all context chunks, and the final
+    director response. Provides a complete overview of the interaction and data
+    retrieval process.
+    
+    Args:
+        user_prompt (str): The original question from the user
+        agents_total_conversation_history (List[Dict[str, str]]): Full conversation history
+        all_context_chunks (List[str]): Context chunks provided by worker agents
+        direcotr_response (str): Final response from the director agent
+        output_dir (str): Directory for saving the PDF file
+        
+    Returns:
+        str: File path to the generated PDF document
+        
+    Implementation Details:
+        - Combines user prompt, conversation history, context chunks, and director response
+        - Formats each section with appropriate headings and styles
+        - Uses markdown_to_reportlab() for markdown formatting conversion
+        - Builds the PDF document using ReportLab
+    
+    Related Files:
+        - Used by conversation_with_context_to_pdf() for async compatibility
+        - markdown_to_reportlab(): For converting markdown to ReportLab format
+    """
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"Conversation_with_context_{timestamp}.pdf"
+    filepath = os.path.join(output_dir, filename)
+    doc = SimpleDocTemplate(filepath, pagesize=letter)
+    styles = getSampleStyleSheet()
+    section_title_style = styles["Heading2"]
+    normal_style = styles["BodyText"]
+    answer_style = ParagraphStyle(
+        'AnswerStyle',
+        parent=styles['BodyText'],
+        spaceBefore=6,
+        spaceAfter=12,
+        leftIndent=20,
+        fontSize=10
+    )
+    story = []
+    # User Prompt
+    story.append(Paragraph("User Prompt", section_title_style))
+    story.append(Paragraph(markdown_to_reportlab(user_prompt), normal_style))
+    story.append(Spacer(1, 0.2*inch))
+    # Agents Conversation History (with sub-question numbering)
+    story.append(Paragraph("Agents Conversation History", section_title_style))
+    subq_counter = 1
+    for item in agents_total_conversation_history:
+        role = item.get('role', '')
+        content = item.get('content', '')
+        if role == 'manager_agent':
+            story.append(Paragraph(f"<b>Sub-question {subq_counter}:</b> {markdown_to_reportlab(content)}", answer_style))
+            subq_counter += 1
+        else:
+            story.append(Paragraph(f"<b>{role}:</b> {markdown_to_reportlab(content)}", answer_style))
+    story.append(Spacer(1, 0.2*inch))
+    # All Context Chunks (grouped by sub-question, 10 per sub-question)
+    story.append(Paragraph("All Context Chunks", section_title_style))
+    num_subqs = (len(all_context_chunks) + 9) // 10
+    for subq_idx in range(num_subqs):
+        start_idx = subq_idx * 10
+        end_idx = min((subq_idx + 1) * 10, len(all_context_chunks))
+        story.append(Paragraph(f"Sub-question {subq_idx+1} Chunks", styles["Heading4"]))
+        for chunk_idx, chunk in enumerate(all_context_chunks[start_idx:end_idx], 1):
+            story.append(Paragraph(f"Chunk {chunk_idx}", styles["Heading5"]))
+            story.append(Paragraph(markdown_to_reportlab(chunk), answer_style))
+        story.append(Spacer(1, 0.1*inch))
+    story.append(Spacer(1, 0.2*inch))
+    # Director Response
+    story.append(Paragraph("Director Response", section_title_style))
+    story.append(Paragraph(markdown_to_reportlab(direcotr_response), answer_style))
+    story.append(Spacer(1, 0.2*inch))
+    doc.build(story)
+    return filepath
+
+
 # Example usage:
 # from consertations_handling import agents_conv_history
 # conversation_history = agents_conv_history(conversation_id, collection, chat_history_retrieval_limit)

@@ -42,8 +42,10 @@ from azure.core.credentials import AzureKeyCredential
 load_dotenv()
 
 # Configuration parameters
-limit_subquestions = 10# maximum number of sub-questions to be created by manager agent
-top_k = 10 # number of chunks to be used by worker agent
+
+
+limit_subquestions = 10
+top_k = 10
 
 # Load system prompts from text files
 def load_prompt_from_file(file_path: str) -> str:
@@ -69,11 +71,6 @@ def load_prompt_from_file(file_path: str) -> str:
 director_system_prompt = load_prompt_from_file('./prompts/director_system_prompt.txt')
 manager_system_prompt = load_prompt_from_file('./prompts/1manager_system_prompt.txt').replace('{limit_subquestions}', str(limit_subquestions))
 worker_system_prompt = load_prompt_from_file('./prompts/worker_system_prompt.txt')
-
-# print(f"director_system_prompt: {director_system_prompt}")
-# print(f"manager_system_prompt: {manager_system_prompt}")
-# print(f"worker_system_prompt: {worker_system_prompt}")
-    
 
 # Azure AI Search configuration
 # Used by tools/v_search.py for semantic hybrid search
@@ -128,11 +125,10 @@ async def manager(
         - tools/json_parseing.py: Parses LLM JSON responses
         - tools/v_search.py: Performs semantic search (via worker agents)
     """
-    
-    print("MMMMMMM")
+
     # Generate unique conversation ID for tracking agent interactions
     agents_conversation_id = str(uuid.uuid4())
-    print(f"Vector search index = {azure_search_index} AND agents_convertation_id = {agents_conversation_id}")
+    print(f"- Vector search index = {azure_search_index} AND agents_convertation_id = {agents_conversation_id}")
     
     # Generate sub-questions based on user query
     # This uses the manager_system_prompt loaded from prompts/manager_system_prompt.txt
@@ -140,7 +136,7 @@ async def manager(
         model=deployment,
         messages=[
             {"role": "system", "content": manager_system_prompt},
-            {"role": "user", "content": f"Previous conversation between user and you: {user_conversation_history},\nMy question: {user_prompt}"},
+            {"role": "user", "content": f"Previous conversation between user and you: {user_conversation_history},\n user's question: {user_prompt}"},
         ],
         max_tokens=800,
         temperature=0.7,
@@ -172,20 +168,6 @@ async def manager(
         list_of_sub_questions = normalized_manager_response["list_of_sub_questions"]
         company_names = normalized_manager_response["company_names"]
 
-    # print(f"============================================================") 
-    # print(f"number of sub-questions {len(list_of_sub_questions)}")
-    # for i in range(len(list_of_sub_questions)):
-    #     print(f"sub-questions: {list_of_sub_questions[i]}")
-    # print(f"company_names within the sub-questions: {company_names}")
-    # print(f"============================================================") 
-
-    # direcotr_response = "director responded"
-    # all_context_chunks = ["context chunks"]
-    # conv_pdf_url = "conv_pdf_url"
-    # return direcotr_response, all_context_chunks, conv_pdf_url
-
-    # Create concurrent tasks for parallel processing of sub-questions
-    # Each task is handled by agents/sub_question_handler.py which coordinates with worker agents
     tasks = [
         process_sub_question(
             llm_client, 
@@ -203,7 +185,7 @@ async def manager(
     ]
     
     # Run all tasks concurrently for efficient processing
-    print(f"Processing {len(tasks)} sub-questions in parallel...")
+    print(f"- Processing {len(tasks)} sub-questions in parallel...")
     results = await asyncio.gather(*tasks)
     
     # Collect all context chunks from worker responses
@@ -212,7 +194,7 @@ async def manager(
     for _, context_chunks in results:
         all_context_chunks.extend(context_chunks)
     
-    print(f"Collected {len(all_context_chunks)} context chunks from all workers")
+    print(f"- Collected {len(all_context_chunks)} context chunks from all workers")
 
     # Generate final response from director agent using all collected information
     # The director agent (agents/director_agent.py) synthesizes all worker responses

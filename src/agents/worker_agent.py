@@ -80,9 +80,7 @@ async def worker(
     # Perform semantic hybrid search using tools/v_search.py
     # This combines vector similarity and text search with company name filtering
     context_chunks, titles = await semantic_hybrid_search(sub_question, search_client, top_k, company_names)
-
-    # Construct user message with retrieved context
-    # Format the sub-question with relevant information for LLM processing
+    
     user_message_with_context = f"#My question: {sub_question}\n\n#Relevant information: {context_chunks}"
 
     # Generate response using worker system prompt and retrieved context

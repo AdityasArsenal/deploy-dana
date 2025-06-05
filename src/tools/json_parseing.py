@@ -102,7 +102,7 @@ def parse_json_from_model_response(
                 print("fall back to the original content could not find json pattern")
     
         # print(f"Extracted JSON: {cleaned_json}")
-        print("extracted manager response json")
+        print("- extracted manager response json")
         
         # Parse the JSON response using Python's json library
         parsed_json = json.loads(cleaned_json)

@@ -71,11 +71,7 @@ async def semantic_hybrid_search(
         - Documents must be named: {CompanyName}.pdf or {CompanyName}.xml
         - Azure AI Search index must contain 'title', 'chunk', and 'text_vector' fields
         - Vector embeddings should be pre-computed and stored in the index
-    """
-    # 1) Build the vector query for semantic similarity (vector search)
-    
-    # print("vvvvvvvvvvvvvvvvvvv")
-    
+    """    
     # Create vector query for semantic similarity search
     # This leverages Azure OpenAI embeddings stored in the search index
     vec_q = VectorizableTextQuery(
@@ -95,10 +91,7 @@ async def semantic_hybrid_search(
             # if "LIMITED" or "limited" or "Limited" in company_name:
             #     company_name = company_name
             # else:
-            #     company_name = company_name + " Limited"
-
-            print(company_name)
-            # print(company_name)
+            #     company_name = company_name + " Limited"  
 
             # Generate document title patterns for filtering
             # Supports both PDF and XML document formats
@@ -169,48 +162,48 @@ async def semantic_hybrid_search(
 
 # Test code - Comment out or wrap in if __name__ == "__main__" to prevent auto-execution
 # This code is for testing the semantic_hybrid_search function directly
-if __name__ == "__main__":
-    """
-    Standalone testing functionality for semantic_hybrid_search.
+# if __name__ == "__main__":
+#     """
+#     Standalone testing functionality for semantic_hybrid_search.
     
-    This section allows direct testing of the search functionality without
-    going through the full agentic workflow. Useful for development and debugging.
+#     This section allows direct testing of the search functionality without
+#     going through the full agentic workflow. Useful for development and debugging.
     
-    Related Files:
-        - agentic.py: Production usage of this search functionality
-        - agents/worker_agent.py: How search results are used in the workflow
-    """
-    import os
-    from dotenv import load_dotenv
-    from azure.core.credentials import AzureKeyCredential
+#     Related Files:
+#         - agentic.py: Production usage of this search functionality
+#         - agents/worker_agent.py: How search results are used in the workflow
+#     """
+#     import os
+#     from dotenv import load_dotenv
+#     from azure.core.credentials import AzureKeyCredential
 
-    load_dotenv()
+#     load_dotenv()
 
-    azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
-    azure_search_index = os.getenv("AI_SEARCH_INDEX")
-    # azure_search_index = "test-vector-index"
-    azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
+#     azure_search_endpoint = os.getenv("AI_SEARCH_ENDPOINT")
+#     azure_search_index = os.getenv("AI_SEARCH_INDEX")
+#     # azure_search_index = "test-vector-index"
+#     azure_search_api_key = os.getenv("AI_SEARCH_API_KEY")
 
-    #Azure AI search client
-    search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
+#     #Azure AI search client
+#     search_client = SearchClient(endpoint = azure_search_endpoint, index_name = azure_search_index, credential = AzureKeyCredential(azure_search_api_key))
 
-    company_names=["Reliance Industries Limited", "ITI Limited"]
+#     company_names=["Reliance Industries Limited", "ITI Limited"]
 
-    query = f"what is {company_names[0]} and {company_names[1]} CARBON EMISSIONS"
-    top_k = 15
-    print(f"Index: {azure_search_index}")
+#     query = f"what is {company_names[0]} and {company_names[1]} CARBON EMISSIONS"
+#     top_k = 15
+#     print(f"Index: {azure_search_index}")
 
-    # Create an async function to run our search
-    async def run_test_search():
-        chunks, titles = await semantic_hybrid_search(query, search_client, top_k, company_names)
+#     # Create an async function to run our search
+#     async def run_test_search():
+#         chunks, titles = await semantic_hybrid_search(query, search_client, top_k, company_names)
         
-        print(f"number of chunks: {len(chunks)}")
-        for i in range(len(chunks)):
-            print(f"\n{i}. {titles[i]} //chunk title")
-            # print(f"## chunk: {chunks[i]}")
+#         print(f"number of chunks: {len(chunks)}")
+#         for i in range(len(chunks)):
+#             print(f"\n{i}. {titles[i]} //chunk title")
+#             # print(f"## chunk: {chunks[i]}")
     
-    # Run the async function
-    asyncio.run(run_test_search())
+#     # Run the async function
+#     asyncio.run(run_test_search())
 
 
 ##To check if  a list of companies are missing from the vector dataset
