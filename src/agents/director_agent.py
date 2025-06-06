@@ -116,7 +116,7 @@ async def director(
     pdf_path = await conversation_to_pdf(agents_total_conversation_history, direcotr_response, output_dir)
     
     #pdf with all the context chunks
-    # pdf_path_with_context = await conversation_with_context_to_pdf(user_prompt, agents_total_conversation_history, all_context_chunks, direcotr_response, output_dir)
+    pdf_path_with_context = await conversation_with_context_to_pdf(user_prompt, agents_total_conversation_history, all_context_chunks, direcotr_response, output_dir)
 
     # Upload PDF to Azure Blob storage and get public URL
     # Allows users to download the conversation summary

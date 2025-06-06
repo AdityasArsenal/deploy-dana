@@ -27,3 +27,72 @@ sub-questions: What safety and health initiatives are described in IOCL's report
 company_names within the sub-questions: ['HPCL', 'IOCL', 'HPCL', 'IOCL', 'HPCL', 'IOCL', 'HPCL', 'IOCL', 'HPCL', 'IOCL']
 
 ============================================================
+
+
+
+    "TotalEnergyConsumedFromRenewableSources", "Renewable Energy %",
+    "TotalEnergyConsumedFromNonRenewableSources", "Non-Renewable Energy %",
+
+    "TotalScope1Emissions", "Scope1 %",
+    "TotalScope2Emissions", "Scope2 %",
+    "TotalScope3Emissions", "Scope3 %",
+
+    "NumberOfFemaleBoardOfDirectors", "Female members",
+    "TotalNumberOfBoardOfDirectors", "Total members",
+
+    "NumberOfEmployeesOrWorkersCoveredForProvidedTrainingOnHumanRightsIssues"
+
+
+    "NumberOfFemaleKeyManagementPersonnel", "Female KMP",
+    "TotalNumberOfKeyManagementPersonnel", "Total KMP",
+
+    "OtherHazardousWaste", "Other",
+    "BioMedicalWaste"
+    "EWaste"
+    "PlasticWaste"
+    "RadioactiveWaste"
+
+
+    "TotalWasteDisposed", "Waste disposed",
+    "TotalWasteGenerated", "Waste Generated",
+    "TotalWasteRecovered", "Waste Recovered",
+
+
+
+Company_Ticker = 
+SWITCH(
+    Companies[company_name],
+    "(Blank)", "(Blank)",
+    "BF UTILITIES LIMITED", "BFUTILITIE",
+    "Future Consumer Limited", "FCONSUMER",
+    "Indraprastha Gas Limited", "IGL",
+    "JEENA SIKHO LIFECARE LIMITED", "JSLL",
+    "Religare Enterprises Limited", "REL", // Assuming this is Reliance Industries Limited
+    "Siemens Limited", "SIEMENS",
+    Companies[company_name] // Fallback to original name if no match
+)
+
+
+Company_With_Ticker = 
+Companies[company_name] & " (" & Companies[Company_Ticker] & ")"
+
+
+Readable_KPI_Name = 
+SWITCH(
+    KPI_Definitions[kpi_name],
+    "TotalEnergyConsumedFromRenewableSources", "Renewable Energy %",
+    "TotalEnergyConsumedFromNonRenewableSources", "Non-Renewable Energy %",
+    "NumberOfFemaleBoardOfDirectors", "Female members",
+    "TotalNumberOfBoardOfDirectors", "Total members",
+    "TotalScope1Emissions", "Scope1 %",
+    "TotalScope2Emissions", "Scope2 %",
+    "TotalScope3Emissions", "Scope3 %",
+    "NumberOfFemaleKeyManagementPersonnel", "Female KMP",
+    "TotalNumberOfKeyManagementPersonnel", "Total KMP",
+    "OtherHazardousWaste", "Other",
+    "TotalWasteDisposed", "Waste disposed",
+    "TotalWasteGenerated", "Waste Generated",
+    "TotalWasteRecovered", "Waste Recovered",
+
+    KPI_Definitions[kpi_name] // Keep the original name for other KPIs
+)
