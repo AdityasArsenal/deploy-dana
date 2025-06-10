@@ -51,6 +51,7 @@ origins = [
     "http://localhost", # Allow localhost
     "http://localhost:5173", # Allow Vite default port
     "http://localhost:3000", # Allow common React dev port
+    "http://localhost:8080", # Allow common React dev port
     "https://www.esgai.space/", # Add your Vercel URL here
     "https://www.esgai.space",
     "https://deploy-dana-frontend-woj6-git-main-adityasarsenals-projects.vercel.app/",
@@ -58,7 +59,6 @@ origins = [
     "https://esgai-frontend-fngrdkfke5h0aphb.eastus2-01.azurewebsites.net/",
     "https://esgai-frontend-fngrdkfke5h0aphb.eastus2-01.azurewebsites.net/",
     "http://localhost:8080/chat",
-    "http://localhost:8080",
     # Add the deployed frontend URL here if applicable
     # "https://your-frontend-domain.com",
 ]

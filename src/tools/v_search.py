@@ -110,7 +110,7 @@ async def semantic_hybrid_search(
 
         # Create Azure AI Search filter string for company documents
         filter_string = f"search.in(title, '{','.join(filter_elements)}')"
-        print("filter_string: ",filter_string)
+        # print("filter_string: ",filter_string)
         
         parent_filter = None    #CURRENTLY DISABLED
 
