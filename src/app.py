@@ -196,6 +196,8 @@ async def chat(request: ChatRequest) -> Dict[str, Any]:
     # Persist the conversation to database using tools/conv_handler.py
     await inserting_chat_buffer(conversation_id, connection, request.user_prompt, model_response, all_context_chunks)
     
+    print(f"conversation id :{conversation_id}")
+
     # Return structured response with all relevant data
     return {
         "response": model_response,
@@ -225,7 +227,10 @@ async def handle_feedback(request: FeedbackRequest) -> Dict[str, str]:
     if not request.feedback or request.feedback.strip() == "":
         return {"message": "Feedback cannot be empty"}
     
-    conversation_id = request.conversation_id if request.conversation_id else str(uuid.uuid4())
+    if request.new_session or not request.conversation_id or request.conversation_id == "string":
+        conversation_id = str(uuid.uuid4())
+    else:
+        conversation_id = request.conversation_id
 
     # Include 'Insideout' as the shard key, mapped to conversation_id
     feedback_doc = {
@@ -239,16 +244,10 @@ async def handle_feedback(request: FeedbackRequest) -> Dict[str, str]:
         await connection_for_feedback.insert_one(feedback_doc)
         
         print("\n--- FEEDBACK RECEIVED ---")
-        print(f"Conversation ID: {conversation_id}")
-        print(f"Feedback: {request.feedback}")
-        print(f"Timestamp: {feedback_doc['timestamp']}")
-        print("-------------------------\n")
-        
+        # print(f"Conversation ID: {conversation_id}")
         return {"message": "Feedback received and stored successfully!"}
     except Exception as e:
         print(f"\n--- FEEDBACK ERROR ---")
-        print(f"Error: {str(e)}")
-        print("---------------------\n")
         return {"message": f"Failed to store feedback: {str(e)}"}
 
 
