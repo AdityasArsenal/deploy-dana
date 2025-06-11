@@ -198,6 +198,7 @@ async def manager(
 
     # Generate final response from director agent using all collected information
     # The director agent (agents/director_agent.py) synthesizes all worker responses
+    
     direcotr_response, conv_pdf_url = await director(
         llm_client,
         director_system_prompt,

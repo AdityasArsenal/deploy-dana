@@ -37,6 +37,7 @@ import uvicorn
 from tools.conv_handler import conv_history, inserting_chat_buffer
 from agentic import manager
 from tools.conv_to_pdf_handler import conversation_to_pdf
+import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -71,6 +72,11 @@ app.add_middleware(
     allow_headers=["*"], # Allow all headers
 )
 
+ # Request model for feedback endpoint
+class FeedbackRequest(BaseModel):
+    feedback: str
+    conversation_id: Optional[str] = None
+
 # Request model for chat endpoint
 class ChatRequest(BaseModel):
     """
@@ -95,6 +101,7 @@ connection_string = os.getenv("MONGO_CONNECTION_STRING")
 mongo_client = AsyncIOMotorClient(connection_string)
 db = mongo_client["ChatHistoryDatabase"]
 connection = db["chat-history-with-cosmos"]
+connection_for_feedback = db["DbForFeedback"]
 
 # Azure OpenAI configuration
 # Used by agentic.py and all agent modules
@@ -196,6 +203,54 @@ async def chat(request: ChatRequest) -> Dict[str, Any]:
         "conversation_id": conversation_id,
         "agents_conv_pdf_url" : agents_conv_pdf_url
     }
+
+@app.post("/feedback")
+async def handle_feedback(request: FeedbackRequest) -> Dict[str, str]:
+    """
+    Handles feedback submission from the frontend, storing it in MongoDB with the conversation ID and shard key.
+    
+    Args:
+        request (FeedbackRequest): The request body containing the feedback text and optional conversation ID.
+        
+    Returns:
+        Dict[str, str]: A confirmation message.
+        
+    Workflow:
+        1. Validate feedback text
+        2. Generate or use provided conversation ID
+        3. Include shard key 'Insideout' mapped to conversation_id
+        4. Store feedback in DbForFeedback collection
+        5. Log feedback to console
+    """
+    if not request.feedback or request.feedback.strip() == "":
+        return {"message": "Feedback cannot be empty"}
+    
+    conversation_id = request.conversation_id if request.conversation_id else str(uuid.uuid4())
+
+    # Include 'Insideout' as the shard key, mapped to conversation_id
+    feedback_doc = {
+        "Insideout": conversation_id,  # Shard key
+        "conversation_id": conversation_id,
+        "feedback": request.feedback,
+        "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+    }
+    
+    try:
+        await connection_for_feedback.insert_one(feedback_doc)
+        
+        print("\n--- FEEDBACK RECEIVED ---")
+        print(f"Conversation ID: {conversation_id}")
+        print(f"Feedback: {request.feedback}")
+        print(f"Timestamp: {feedback_doc['timestamp']}")
+        print("-------------------------\n")
+        
+        return {"message": "Feedback received and stored successfully!"}
+    except Exception as e:
+        print(f"\n--- FEEDBACK ERROR ---")
+        print(f"Error: {str(e)}")
+        print("---------------------\n")
+        return {"message": f"Failed to store feedback: {str(e)}"}
+
 
 @app.get("/")
 async def home() -> Dict[str, str]:
