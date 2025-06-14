@@ -60,6 +60,10 @@ origins = [
     "https://esgai-frontend-fngrdkfke5h0aphb.eastus2-01.azurewebsites.net/",
     "https://esgai-frontend-fngrdkfke5h0aphb.eastus2-01.azurewebsites.net/",
     "http://localhost:8080/chat",
+    "*",
+    "/",
+    "/*",
+    "*/"
     # Add the deployed frontend URL here if applicable
     # "https://your-frontend-domain.com",
 ]
